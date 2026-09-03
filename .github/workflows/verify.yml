@@ -1,0 +1,225 @@
+name: Verify
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  verify:
+    name: Verify (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Compile manager
+        run: python -m py_compile manager.py
+
+      - name: Verify release bundle
+        run: python manager.py verify --json
+
+      - name: Check manifest and wheel versions
+        run: |
+          python - <<'PY'
+          import json
+          import re
+          import zipfile
+          from email.parser import BytesParser
+          from pathlib import Path
+
+          manifest_path = Path("amz-cli-v1/manifest.json")
+          manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+          version = manifest.get("version")
+          if not isinstance(version, str) or re.fullmatch(
+              r"(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)", version
+          ) is None:
+              raise SystemExit("manifest version must use X.Y.Z")
+
+          wheels = manifest.get("wheels")
+          if not isinstance(wheels, list) or len(wheels) != 1:
+              raise SystemExit("manifest must contain exactly one wheel")
+          wheel_name = wheels[0].get("file") if isinstance(wheels[0], dict) else None
+          if not isinstance(wheel_name, str):
+              raise SystemExit("manifest wheel filename is missing")
+          if not wheel_name.startswith(f"amz_cli_sdk-{version}-"):
+              raise SystemExit(
+                  f"wheel filename {wheel_name!r} does not match manifest version {version!r}"
+              )
+
+          wheel_path = Path("amz-cli-v1/wheels") / wheel_name
+          with zipfile.ZipFile(wheel_path) as wheel:
+              metadata_files = [
+                  name
+                  for name in wheel.namelist()
+                  if name.endswith(".dist-info/METADATA")
+              ]
+              if len(metadata_files) != 1:
+                  raise SystemExit("wheel must contain exactly one METADATA file")
+              metadata = BytesParser().parsebytes(wheel.read(metadata_files[0]))
+
+          wheel_version = metadata.get("Version")
+          if wheel_version != version:
+              raise SystemExit(
+                  f"wheel metadata version {wheel_version!r} does not match "
+                  f"manifest version {version!r}"
+              )
+          print(f"manifest and wheel versions match: {version}")
+          PY
+
+      - name: Run standard-library unit tests
+        run: |
+          if [[ -d tests ]]; then
+            python -m unittest discover -s tests -p 'test_*.py' -v
+          else
+            python -m unittest discover -s . -p 'test_*.py' -v
+          fi
+
+      - name: Reject tracked secrets and generated files
+        run: |
+          python - <<'PY'
+          import re
+          import subprocess
+          import zipfile
+          from pathlib import Path, PurePosixPath
+
+          output = subprocess.check_output(["git", "ls-files", "-z"])
+          tracked = [
+              value.decode("utf-8", errors="surrogateescape")
+              for value in output.split(b"\0")
+              if value
+          ]
+
+          junk_directories = {
+              ".mypy_cache",
+              ".nox",
+              ".pytest_cache",
+              ".ruff_cache",
+              ".tox",
+              ".venv",
+              "__pycache__",
+              "build",
+              "dist",
+              "node_modules",
+              "venv",
+          }
+          junk_names = {
+              ".coverage",
+              ".ds_store",
+              "desktop.ini",
+              "thumbs.db",
+          }
+          junk_suffixes = (
+              ".bak",
+              ".pyc",
+              ".pyo",
+              ".swp",
+              ".swo",
+              ".tar.gz",
+              ".tmp",
+              ".zip",
+          )
+          secret_names = {
+              ".sif_token",
+              "client_secret.json",
+              "config.yaml",
+              "config.yml",
+              "credentials",
+              "credentials.json",
+              "id_ed25519",
+              "id_rsa",
+          }
+          secret_suffixes = (".jks", ".key", ".keystore", ".p12", ".pem", ".pfx")
+          template_suffixes = (".example", ".sample", ".template")
+
+          violations = []
+          for raw_path in tracked:
+              path = PurePosixPath(raw_path.replace("\\", "/"))
+              parts = {part.lower() for part in path.parts}
+              name = path.name.lower()
+
+              if parts & junk_directories:
+                  violations.append((raw_path, "generated directory"))
+              elif (
+                  name in junk_names
+                  or name.startswith(".build_")
+                  or name.startswith(".fontconfig-")
+                  or name.endswith(junk_suffixes)
+                  or name.endswith("~")
+              ):
+                  violations.append((raw_path, "generated file"))
+
+              is_env_file = name == ".env" or name.startswith(".env.")
+              is_template = name.endswith(template_suffixes)
+              if (is_env_file and not is_template) or name in secret_names:
+                  violations.append((raw_path, "secret file path"))
+              elif name.endswith(secret_suffixes):
+                  violations.append((raw_path, "private credential file"))
+
+          secret_patterns = (
+              ("AWS access key", re.compile(rb"\b(?:AKIA|ASIA)[0-9A-Z]{16}\b")),
+              (
+                  "private key",
+                  re.compile(rb"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----"),
+              ),
+              ("GitHub token", re.compile(rb"\bgh[pousr]_[A-Za-z0-9]{30,}\b")),
+              (
+                  "OpenAI-style key",
+                  re.compile(rb"\bsk-(?:proj-)?[A-Za-z0-9_-]{20,}\b"),
+              ),
+          )
+          for raw_path in tracked:
+              file_path = Path(raw_path)
+              if not file_path.is_file():
+                  continue
+              content = file_path.read_bytes()
+              for label, pattern in secret_patterns:
+                  if pattern.search(content):
+                      violations.append((raw_path, label))
+              if file_path.suffix == ".whl":
+                  with zipfile.ZipFile(file_path) as wheel:
+                      for member in wheel.infolist():
+                          if member.is_dir():
+                              continue
+                          member_path = PurePosixPath(member.filename)
+                          member_name = member_path.name.lower()
+                          if member_name == ".env" or member_name in secret_names:
+                              violations.append(
+                                  (f"{raw_path}:{member.filename}", "secret file in wheel")
+                              )
+                          member_content = wheel.read(member)
+                          for label, pattern in secret_patterns:
+                              if pattern.search(member_content):
+                                  violations.append(
+                                      (f"{raw_path}:{member.filename}", label)
+                                  )
+
+          if violations:
+              for path, reason in sorted(set(violations)):
+                  print(f"blocked tracked file: {path} ({reason})")
+              raise SystemExit(1)
+          print(f"checked {len(tracked)} tracked files")
+          PY

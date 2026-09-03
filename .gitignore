@@ -1,0 +1,82 @@
+# Operating systems
+.DS_Store
+._*
+.Spotlight-V100/
+.Trashes/
+Desktop.ini
+Thumbs.db
+
+# Editors and local Agent state
+.idea/
+.vscode/
+.agents/
+.claude/
+.codex/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
+
+# Python caches, environments, tests, and coverage
+__pycache__/
+*.py[cod]
+*$py.class
+.coverage
+.coverage.*
+.hypothesis/
+.mypy_cache/
+.nox/
+.pytest_cache/
+.ruff_cache/
+.tox/
+.venv/
+htmlcov/
+coverage.xml
+venv/
+
+# Python build output. The checked-in release wheel under amz-cli-v1/wheels
+# is intentional and must not be ignored.
+build/
+dist/
+.eggs/
+*.egg-info/
+pip-wheel-metadata/
+
+# Local secrets and machine-specific configuration
+.env
+.env.*
+!.env.example
+!.env.sample
+config.yaml
+config.local.yaml
+credentials.json
+credentials.*.json
+*.jks
+*.key
+*.keystore
+*.p12
+*.pem
+*.pfx
+
+# Generated release archives. GitHub Actions recreates these from a tag.
+/*.tar.gz
+/*.zip
+
+# Local updater and installer state
+state.json
+update.lock
+staging/
+
+# Temporary files and local document-build helpers
+.build_*
+.fontconfig-*
+/.docs/
+/AGENTS.md
+/*.docx
+/*使用指南*.md
+/amz-cli-v1/references/docs/
+*.bak
+*.log
+*.orig
+*.tmp

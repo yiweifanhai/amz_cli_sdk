@@ -1,0 +1,6 @@
+interface:
+  display_name: "Amazon 专利深查"
+  short_description: "检索专利候选并核对权利人、状态与相关性"
+  default_prompt: "使用 $patent-analysis 对这个 Amazon 商品做美国专利深查。"
+policy:
+  allow_implicit_invocation: true

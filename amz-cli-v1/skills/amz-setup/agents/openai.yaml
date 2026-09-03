@@ -1,0 +1,6 @@
+interface:
+  display_name: "配置 Amazon 数据 SDK"
+  short_description: "用本机安全页面安装和配置 amz-cli 服务密钥"
+  default_prompt: "使用 $amz-setup 帮我完成 amz-cli 的安装和 API Key 配置。"
+policy:
+  allow_implicit_invocation: true

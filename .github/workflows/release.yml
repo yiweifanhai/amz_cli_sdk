@@ -1,0 +1,107 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    uses: ./.github/workflows/verify.yml
+
+  release:
+    name: Publish release
+    needs: verify
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Match tag to manifest version
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import re
+          from pathlib import Path
+
+          tag = os.environ["RELEASE_TAG"]
+          if re.fullmatch(r"v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)", tag) is None:
+              raise SystemExit(f"release tag must use vX.Y.Z: {tag!r}")
+          manifest = json.loads(
+              Path("amz-cli-v1/manifest.json").read_text(encoding="utf-8")
+          )
+          version = manifest.get("version")
+          expected = f"v{version}"
+          if tag != expected:
+              raise SystemExit(
+                  f"release tag {tag!r} does not match manifest version {version!r}"
+              )
+          print(f"release tag matches manifest: {tag}")
+          PY
+
+      - name: Build release archives
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          archive_name="amz-cli-${RELEASE_TAG}"
+          mkdir -p dist
+          git archive --format=zip --output="dist/${archive_name}.zip" "$GITHUB_SHA"
+          git archive --format=tar.gz --output="dist/${archive_name}.tar.gz" "$GITHUB_SHA"
+
+          python - <<'PY'
+          import os
+          import tarfile
+          import zipfile
+          from pathlib import Path
+
+          archive_name = f"amz-cli-{os.environ['RELEASE_TAG']}"
+          zip_path = Path("dist") / f"{archive_name}.zip"
+          tar_path = Path("dist") / f"{archive_name}.tar.gz"
+          with zipfile.ZipFile(zip_path) as archive:
+              zip_names = archive.namelist()
+          with tarfile.open(tar_path, "r:gz") as archive:
+              tar_names = archive.getnames()
+          for path, names in ((zip_path, zip_names), (tar_path, tar_names)):
+              if not any(name.startswith("amz-cli-v1/") for name in names):
+                  raise SystemExit(f"{path} does not contain amz-cli-v1/")
+          PY
+
+          (
+            cd dist
+            sha256sum "${archive_name}.zip" "${archive_name}.tar.gz" > SHA256SUMS
+          )
+
+      - name: Create or update GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" dist/* \
+              --repo "$GITHUB_REPOSITORY" \
+              --clobber
+          else
+            gh release create "$RELEASE_TAG" dist/* \
+              --repo "$GITHUB_REPOSITORY" \
+              --verify-tag \
+              --title "amz-cli $RELEASE_TAG" \
+              --generate-notes
+          fi

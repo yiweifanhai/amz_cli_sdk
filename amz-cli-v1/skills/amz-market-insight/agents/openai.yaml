@@ -1,0 +1,6 @@
+interface:
+  display_name: "Amazon 市场洞察"
+  short_description: "综合市场画像、竞品 VOC 与外部趋势"
+  default_prompt: "使用 $amz-market-insight 分析这个 Amazon US 细分市场。"
+policy:
+  allow_implicit_invocation: true

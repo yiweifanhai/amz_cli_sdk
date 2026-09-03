@@ -1,0 +1,6 @@
+interface:
+  display_name: "Amazon 准入风险"
+  short_description: "核对法规、类目和 FBA 的当前准入要求"
+  default_prompt: "使用 $amz-risk-entry 检查这个产品在 Amazon US 的法规和平台准入风险。"
+policy:
+  allow_implicit_invocation: true

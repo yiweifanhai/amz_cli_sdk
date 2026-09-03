@@ -1,0 +1,6 @@
+interface:
+  display_name: "Amazon 新品概念验证"
+  short_description: "用市场与竞品 VOC 验证新品是否值得做"
+  default_prompt: "使用 $amz-concept-check 验证这个 Amazon 新品概念，并给出证据和评分。"
+policy:
+  allow_implicit_invocation: true

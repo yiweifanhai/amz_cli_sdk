@@ -1,0 +1,6 @@
+interface:
+  display_name: "Amazon IP 风险快筛"
+  short_description: "筛查商品的专利、商标、版权与授权风险"
+  default_prompt: "使用 $amz-risk-ip 对这个 Amazon 产品做知识产权风险快筛。"
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,6 @@
+interface:
+  display_name: "Amazon 数据 SDK"
+  short_description: "以 Product、Keyword 和 Market Entity 调用 Amazon 数据能力"
+  default_prompt: "使用 $amz 从合适的 Entity 入口完成这个 Amazon 数据任务。"
+policy:
+  allow_implicit_invocation: true

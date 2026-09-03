@@ -1,0 +1,6 @@
+interface:
+  display_name: "Amazon 产品改进"
+  short_description: "聚合竞品优势、弱点和使用洞察生成提案"
+  default_prompt: "使用 $amz-product-improve 分析这组 ASIN，并给出下一代产品改进提案。"
+policy:
+  allow_implicit_invocation: true

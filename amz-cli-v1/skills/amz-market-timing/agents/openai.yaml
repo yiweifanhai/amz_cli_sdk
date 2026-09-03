@@ -1,0 +1,6 @@
+interface:
+  display_name: "Amazon 市场时机"
+  short_description: "结合产品用途与关键词趋势判断进入窗口"
+  default_prompt: "使用 $amz-market-timing 判断这个 ASIN 现在进入市场是否太晚。"
+policy:
+  allow_implicit_invocation: true
