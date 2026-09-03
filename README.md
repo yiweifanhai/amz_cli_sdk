@@ -1,114 +1,434 @@
-# amz-cli Agent 发行仓库
+# amz-cli：亚马逊运营 AI 助手的数据与分析工具
 
-把本仓库链接发给 Codex、Claude Code 或其他可运行终端命令的 Agent，它就能安装
-amz-cli。安装后，`amz` 在使用前按间隔检查稳定版本，并自动更新。已有 API Key、Token、
-缓存和任务数据不会被覆盖。
+amz-cli 让 Codex、Claude Code 和其他 AI 助手（Agent）可以获取 Amazon 数据、计算费用与利润，
+并完成运营分析。
 
-## 发给 Agent 的一句话
+你只需要说清楚要做什么决策。AI 助手负责选择工具，amz-cli 负责提供数据和分析结果。
+运营人员不需要学习代码，也不需要记住命令。
+
+> 覆盖 100+ 项可组合功能 · 主要适用于 Amazon US · 当前为只读工具
+
+## 覆盖 100+ 项亚马逊运营功能
+
+当前版本覆盖 100+ 项可组合的数据查询、费用计算和业务分析功能。下面按 10 个业务场景
+列出 105 项常见用途。你只需要说明目标，AI 助手会自动选择并组合相关功能。
+
+| Capability Area | 中文场景 | 数量 | 能帮你做什么 |
+|---|---|---:|---|
+| Product & Competitors | 商品与竞品 | 8 项 | 看清商品现状、类目位置、流量来源和主要竞品。 |
+| Customer Insights | 客户之声 | 10 项 | 从评论中找优势、痛点、场景、人群、动机和未满足需求。 |
+| Keywords & Traffic | 关键词与流量 | 12 项 | 判断关键词规模、竞争、趋势、相关性和 Listing 覆盖。 |
+| Market Insights | 市场洞察 | 12 项 | 看价格带、品牌集中度、卖家结构、竞争强度和进入机会。 |
+| Demand & Timing | 需求与时机 | 8 项 | 识别需求变化、季节性和合适的上市时间。 |
+| Profit & FBA | 利润与 FBA | 9 项 | 测算平台费用、头程、采购、广告后利润和资金回报。 |
+| Listing Optimization | Listing 优化 | 12 项 | 找漏词、安排关键词位置、微调或重写文案。 |
+| Product Validation & Improvement | 新品与产品改进 | 12 项 | 评估新品概念、比较创新差异、提出可测试的改进方案。 |
+| Product Discovery & Sourcing | 商品发现与供应链 | 8 项 | 搜索类目、榜单、商品和相似的 1688 货源。 |
+| Compliance & IP | 准入与知识产权 | 14 项 | 初筛法规、平台要求、专利、商标、版权和授权风险。 |
+| **Total** | **合计** | **105 项** | **AI 助手可按你的任务组合使用。** |
+
+### Product & Competitors｜商品与竞品（8 项）
+
+| Capability | 中文名称 | 中文说明 |
+|---|---|---|
+| Product Overview | 商品全貌 | 读取标题、五点、描述、图片、变体、品牌、类目和畅销排名。 |
+| Competitor Discovery | 竞品发现 | 以指定 ASIN 为起点，寻找相似商品和主要竞品。 |
+| Performance Snapshot | 核心表现 | 比较价格、销量、评分、评论量和排名等关键表现。 |
+| Traffic Keyword Discovery | 流量反查 | 找出给指定商品带来流量的搜索词。 |
+| Primary Keyword Selection | 主力词筛选 | 从大量流量词中选出若干最值得关注的词。 |
+| Rufus Q&A | Rufus 问答 | 获取 Amazon Rufus 对商品相关问题的回答。 |
+| Market Positioning | 市场定位 | 根据主力关键词，把单个商品放回对应市场中观察。 |
+| Issue Source | 问题归因 | 区分单品自身问题和多个竞品共有的问题。 |
+
+### Customer Insights｜客户之声与评论分析（10 项）
+
+| Capability | 中文名称 | 中文说明 |
+|---|---|---|
+| Review Collection | 评论采集 | 按星级和研究深度取得需要的评论样本。 |
+| Customer Favorites | 好评亮点 | 提取用户喜欢的功能、惊喜点和价值感知。 |
+| Customer Comparisons | 竞品对比 | 找出用户在评论中提到的替代品和比较理由。 |
+| Customer Pain Points | 差评痛点 | 提取评论中反复出现的痛点、结构问题和品控问题。 |
+| Use Cases | 场景洞察 | 识别产品在什么时间、地点和情况下被使用。 |
+| Customer Profiles | 人群画像 | 识别主要使用者、购买者和受益者。 |
+| Purchase Drivers | 购买动机 | 从评论中归纳用户可能的购买原因和关注重点。 |
+| Customer Wish List | 用户愿望 | 整理功能、变体、配件和改进需求。 |
+| Satisfaction Check | 满意度判断 | 结合完整星级分布，避免被少量差评误导。 |
+| Cross-Product Themes | 共同规律 | 汇总多个竞品共有的成功因素和共同问题。 |
+
+### Keywords & Traffic｜关键词与流量（12 项）
+
+| Capability | 中文名称 | 中文说明 |
+|---|---|---|
+| Search Demand | 搜索规模 | 查看关键词搜索量，判断需求规模。 |
+| Keyword Competition | 竞争强度 | 查看竞争程度，判断一个词是否过于拥挤。 |
+| Advertising Cost | 广告成本 | 查看关键词竞价和单次点击成本。 |
+| Click & Conversion Rates | 点击转化 | 查看点击率和转化率，判断流量质量。 |
+| Search Trends | 历史趋势 | 查看关键词在各时间点的搜索量。 |
+| Search Result Products | 关键词商品 | 查看目标关键词搜索结果中的相关商品。 |
+| Search Intent Groups | 意图分组 | 把一批候选词按消费者搜索意图分组。 |
+| Product Relevance | 相关性判断 | 评估关键词与产品的匹配程度。 |
+| Keyword Prioritization | 关键词排序 | 综合数据和搜索意图比较候选词的优先级。 |
+| Traffic Share | 流量占比 | 查看每个搜索词为指定商品带来的流量占比和自然流量占比。 |
+| Advertising Funnel | 广告漏斗 | 查看搜索、点击、购买、获客成本和广告效率。 |
+| Weekly Search Rank | 周排名研究 | 使用你提供的 Amazon 品牌分析数据研究关键词周排名。 |
+
+### Market Insights｜市场洞察（12 项）
+
+| Capability | 中文名称 | 中文说明 |
+|---|---|---|
+| Market Sample | 市场样本 | 把关键词相关商品整理为本次市场分析样本。 |
+| Price Segments | 价格分层 | 计算低、中、高价格带及其商品分布。 |
+| Ratings & Review Distribution | 口碑分布 | 查看评分和评论量在市场中的分布。 |
+| Brand Concentration | 品牌集中度 | 查看头部品牌在本次样本中的商品占比。 |
+| Opportunity Score | 机会评分 | 根据市场统计给出进入机会参考分。 |
+| Seller Mix | 卖家结构 | 在可识别的样本中统计卖家来源和中国卖家占比。 |
+| Product Age Mix | 上架年限 | 比较新品、成熟商品和上架时间分布。 |
+| Price-Driving Features | 定价规格 | 分析可能解释市场价格差异的主要规格。 |
+| Purchase Decision Factors | 购买因素 | 提出价格之外可能影响消费者选择的因素。 |
+| Competitor Segments | 竞品分组 | 按规格、定位和购买因素对竞品分类。 |
+| Market Snapshot | 市场画像 | 汇总价格、口碑、品牌和卖家等数据，形成市场样本概览。 |
+| Unmet Needs | 缺口发现 | 结合多个竞品的客户反馈寻找未满足需求。 |
+
+市场结论只代表本次取得的商品样本，不代表 Amazon 全市场。市场画像的综合分主要反映
+数据完整度，不等于市场吸引力。
+
+### Demand & Timing｜需求趋势与进入时机（8 项）
+
+| Capability | 中文名称 | 中文说明 |
+|---|---|---|
+| Demand Over Time | 需求变化 | 比较近期与长期表现，判断需求变化幅度。 |
+| Seasonality | 旺淡季识别 | 找出旺季、淡季和主要需求高峰。 |
+| Growth Direction | 增长判断 | 识别增长、下降和异常波动。 |
+| Demand Strength | 需求强度 | 综合趋势和市场数据，提供需求强弱参考。 |
+| Launch Timing | 上市排期 | 把当前日期和实际开发周期放进时机判断。 |
+| Peak-Season Fit | 高峰匹配 | 比较预计开售月份与需求高峰是否匹配。 |
+| Timing Recommendation | 进入建议 | 仅针对上市时机给出进入、谨慎或停止的参考。 |
+| Confidence Level | 可信度说明 | 数据不足时明确降低结论可信度。 |
+
+### Profit & FBA｜利润、FBA 与资金效率（9 项）
+
+| Capability | 中文名称 | 中文说明 |
+|---|---|---|
+| FBA Fulfillment Fees | FBA 费用 | 按美国站费率估算单件配送费。 |
+| Amazon Referral Fees | 平台佣金 | 根据输入的售价和费率估算 Amazon 佣金。 |
+| Inbound Freight Cost | 头程成本 | 把不同运输方式的单件头程计入成本。 |
+| Landed-Cost Margin | 采购毛利 | 估算扣除平台费、采购价和头程后的毛利。 |
+| Profit After Advertising | 广告后利润 | 结合点击成本和转化率估算广告后的利润。 |
+| Shipping Method Comparison | 物流比较 | 比较海运慢线、海运快线、空运和快递。 |
+| Return on Capital | 资金回报 | 估算资金回报率和日回报率。 |
+| Profit Drivers | 利润关键项 | 找出最影响利润的售价、成本、广告和物流变量。 |
+| Missing Cost Check | 缺项提醒 | 指出缺少哪些成本，以及它会怎样影响结果。 |
+
+利润结果取决于输入。没有真实采购价时，采购毛利和资金回报会虚高；测算结果不能代替
+最终财务账单。
+
+### Listing Optimization｜Listing 与消费者意图优化（12 项）
+
+| Capability | 中文名称 | 中文说明 |
+|---|---|---|
+| Keyword Coverage | 关键词覆盖 | 检查重要关键词是否出现在当前 Listing 中。 |
+| Title Keyword Selection | 标题选词 | 判断哪些关键词适合放进商品标题。 |
+| Bullet Keywords | 五点选词 | 判断哪些关键词适合放进每条五点描述。 |
+| Natural Keyword Insertion | 自然补词 | 在尽量不改变原文的情况下补充关键词。 |
+| Title Rewrite | 标题改写 | 只修改商品标题，保留其他内容。 |
+| Bullet Point Rewrite | 五点改写 | 只修改指定的一条五点描述。 |
+| Full Listing Rewrite | 完整改写 | 按关键词层级改写标题和全部五点。 |
+| Listing Revision Comparison | 改写对比 | 逐词比较修改前后差异，避免误删重要信息。 |
+| Listing Copy Insights | 文案信息 | 从商品文案提取属性、场景、对象和购买意图。 |
+| Visual Listing Insights | 图文分析 | 结合商品文案和主图，补充消费者能从图片感知的信息。 |
+| Synonym Grouping | 同义词合并 | 合并多个商品中含义相近的表达。 |
+| Keyword Placement Recommendations | 位置建议 | 建议消费者意图相关词放在文案的什么位置。 |
+
+所有 Listing 改写稿都需要运营人员审核后再发布。
+
+### Product Validation & Improvement｜新品验证、创新与产品改进（12 项）
+
+| Capability | 中文名称 | 中文说明 |
+|---|---|---|
+| Demand Evidence | 需求证据 | 评估现有证据是否支持新品所解决的问题。 |
+| Target Audience Clarity | 受众清晰度 | 评估现有证据是否支持清晰、集中的目标用户。 |
+| Perceived Differentiation | 差异感知 | 评估现有证据是否支持消费者能够感知新品变化。 |
+| Willingness-to-Pay Signals | 价值判断 | 评估现有证据是否支持消费者愿意为差异付费。 |
+| Contrary Evidence | 反面证据 | 主动寻找会推翻新品设想的数据。 |
+| Low-Cost Validation Tests | 低成本测试 | 给出投产前可以快速执行的验证动作。 |
+| Innovation Benchmarking | 创新对比 | 比较新品与多个畅销商品的差异。 |
+| Copying Difficulty | 复制难度 | 整理影响复制难度的专利、供应链、技术和品牌信号。 |
+| Material Feasibility | 材质可行性 | 初步评估材质和量产条件，最终由供应商验证。 |
+| Key Success Factors | 成功因素 | 提炼多个领先商品共有的成功原因。 |
+| Incremental Product Improvements | 微改造方案 | 把共同痛点转成具体、可执行的产品改进。 |
+| Stop Criteria | 停止信号 | 为每个方案说明何时继续、调整或放弃。 |
+
+### Product Discovery & Sourcing｜商品发现、类目与供应链（8 项）
+
+| Capability | 中文名称 | 中文说明 |
+|---|---|---|
+| Product Search | 商品搜索 | 按关键词搜索 Amazon 商品。 |
+| Category Search | 类目搜索 | 按关键词或类目名称寻找对应类目。 |
+| Category Hierarchy | 类目结构 | 查看一个类目的上下级关系。 |
+| New Releases | 新品榜单 | 读取 Amazon 新品榜（New Releases）。 |
+| Search Filter Insights | 筛选条件 | 查看消费者搜索时可以使用哪些筛选条件。 |
+| Image-Based Sourcing | 图片找货 | 根据公开商品图片寻找外观相近的 1688 货源候选。 |
+| Sourcing Candidate Ranking | 候选排序 | 按图片相似程度整理候选供货信息，不代表同厂或同品质。 |
+| Web Research | 网页补充 | 搜索公开资料，补充市场和行业背景。 |
+
+网页搜索只能作为辅助信息，不能替代法规、Amazon 政策或知识产权的官方来源。
+
+### Compliance & IP｜法规、平台准入与知识产权（14 项）
+
+| Capability | 中文名称 | 中文说明 |
+|---|---|---|
+| Regulatory Screening | 法规识别 | 根据产品、材料和目标人群识别可能适用的法规。 |
+| Claims Risk | 声明风险 | 识别医疗、健康、儿童等功效和受众声明风险。 |
+| Special Product Risk | 特殊商品 | 识别电池、无线、液体和气雾剂等特殊风险。 |
+| Amazon Policy Requirements | 平台要求 | 区分政府法规和 Amazon 平台要求。 |
+| Account Eligibility | 账户确认 | 标出仍需在 Seller Central 中确认的账户资格。 |
+| Design Patent Screening | 外观专利 | 初步筛查可能相关的外观设计权利。 |
+| Utility Patent Screening | 实用专利 | 初步筛查可能覆盖功能或结构的专利。 |
+| Trademark Risk Signals | 商标线索 | 初步筛查名称、标识和品牌相关商标风险。 |
+| Copyright Risk Signals | 版权线索 | 初步筛查图片、文案和造型相关版权风险。 |
+| Licensed IP Risk | 授权风险 | 识别影视、角色、球队和品牌授权风险。 |
+| Patent Status Check | 权利人核对 | 核对专利候选的申请人、所有人和法律状态。 |
+| IP Search Documentation | 检索记录 | 整理检索路径、来源、相关性和遗漏检查。 |
+| Risk Rating | 风险分级 | 根据证据给出风险等级，但不把低风险写成安全。 |
+| Legal Review Preparation | 律师复核 | 为律师进一步判断侵权风险准备候选和证据。 |
+
+没有搜索到风险不等于安全。法规、平台政策和知识产权状态会变化，高风险任务必须核对
+执行当天的官方来源。
+
+## 最快开始方式
+
+只使用官方仓库：<https://github.com/yiweifanhai/amz_cli_sdk>。
+
+把官方仓库链接发给 AI 助手，然后复制下面这段话：
 
 ```text
-请把这个仓库克隆到持久的 Skill 目录，完整读取 README.md 和 SKILL.md，安装 amz-cli，
-检查配置状态；如果尚未配置，打开本机配置页并等待我保存。最后运行 amz version --json
-与 amz doctor。不要读取或回显我本机已有的任何 Key。
+请按照这个官方仓库的说明安装或更新 amz-cli。
+需要配置密钥时，请打开本机配置页面让我自己填写。
+不要读取、显示或要求我在聊天中发送任何密钥。
+完成后请确认工具是否可用，然后等待我的亚马逊运营任务。
 ```
 
-不要只下载 zip 后安装。自动更新需要保留 Git clone。
+安装完成后，直接告诉 AI 助手你要解决的业务问题。
 
-## 首次发布到 GitHub
+飞书等云端 AI 助手不能直接使用电脑上的本机安装版本，需要先完成云端工具接入。
 
-本地仓库已经包含 `main` 首次提交和 `v1.0.0` 标签。创建空的 GitHub 仓库后运行：
+## 怎样提出一个好问题
 
-```bash
-cd /Users/shuxin/kjprojects/amz-cli/output
-git remote add origin <GITHUB_REPO_URL>
-git push -u origin main
-git push origin v1.0.0
+不要只说“帮我看看这个产品”。一次任务最好包含下面六项信息：
+
+| 信息 | 示例 |
+|---|---|
+| 决策目标 | 判断是否进入、选择主推词、找改进点、判断何时上架 |
+| 目标站点 | US；其他站点需要先确认数据是否支持 |
+| 分析对象 | ASIN、关键词、竞品列表、产品图片或新品描述 |
+| 分析范围 | 单个商品、3-10 个竞品、一个细分市场 |
+| 业务限制 | 目标售价、采购成本、材料限制、是否允许改模、上市周期 |
+| 交付要求 | 一句话结论、证据、风险、行动项、表格或清单 |
+
+### 通用需求模板
+
+```text
+请使用 amz-cli 完成以下任务。
+
+我要做的决策：
+目标站点：
+分析对象：
+分析范围：
+业务限制：
+希望得到的结果：
+
+执行要求：
+1. 必须实际使用 amz-cli 获取数据，不能只用通用知识回答。
+2. 写清数据来源、分析日期、样本范围和没有成功取得的数据。
+3. 区分事实、推断和建议；证据不足时写“未知”。
+4. 不要把单个商品的问题扩大成整个市场的问题。
+5. 先给业务结论，再给证据、限制和下一步行动。
+6. 保留可以复查的任务记录。
 ```
 
-不要在 GitHub 建仓时自动添加 README、LICENSE 或 `.gitignore`，否则会产生两份不同的
-首次提交。更新器会读取每个用户 clone 中的 `origin`，仓库名称不需要写死在安装器里。
+## 可直接复制的常用任务
 
-## 安装
+### 单个 ASIN 全面分析
 
-Codex：
+```text
+请使用 amz-cli 分析 US 站 ASIN B0XXXX。
 
-```bash
-git clone <GITHUB_REPO_URL> ~/.codex/skills/amz
-bash ~/.codex/skills/amz/install.sh --setup
+请给出：
+1. 商品和类目事实。
+2. 主力流量词。
+3. 客户之声：优势、弱点、使用场景、人群和购买动机。
+4. 主关键词对应的市场统计和市场画像。
+5. 最值得借鉴和最应该避开的内容。
+6. 数据范围、失败项和结论可信度。
+
+不要把单个商品的问题写成整个市场的共同问题。
 ```
 
-Claude Code：
+### 关键词市场分析
 
-```bash
-git clone <GITHUB_REPO_URL> ~/.claude/skills/amz
-bash ~/.claude/skills/amz/install.sh --setup
+```text
+请使用 amz-cli 分析 US 站关键词“portable blender”，类目为【类目】。
+
+请检查关键词特征、搜索趋势、代表商品、价格带、评分、评论量、
+品牌集中度、卖家结构和市场画像。
+
+请写明本次覆盖的商品数量。结论只能代表本次样本，不能写成 Amazon 全市场。
 ```
 
-其他 Agent 或只安装 CLI：
+### 从竞品中找产品改进方向
 
-```bash
-git clone <GITHUB_REPO_URL> ~/.local/share/amz-cli/repo
-bash ~/.local/share/amz-cli/repo/install.sh --setup
+```text
+请使用 amz-cli 分析以下 US 站竞品：
+B0XXXX、B0YYYY、B0ZZZZ。
+
+它们属于同一细分市场和相近价格带。
+我们的限制是：【目标成本】【是否允许改模】【材料限制】。
+
+请输出共同成功因素、结构或品控问题、使用场景和目标人群，
+再给 5-10 条具体改进方案。每条方案写明难度、收益、验证方法和停止信号。
 ```
 
-Windows PowerShell 把最后一条命令换成：
+至少成功取得并分析 3 个竞品的客户反馈，才适合总结市场共性。只出现在一个 ASIN 的
+问题，应标为单品问题。
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\install.ps1 -Setup
+### 新品概念验证
+
+```text
+请使用 amz-cli 验证这个新品概念。
+
+产品描述或图片：
+目标关键词：
+目标售价：
+目标用户：
+与现有产品相比的主要变化：
+
+请从需求真实性、受众清晰度、差异化感知和价值感知四个方面评分。
+请主动寻找反面证据，并给出低成本验证方法和放弃信号。
 ```
 
-安装器会准备 `uv` 和独立 Python 3.12，再安装仓库中的 wheel。它不修改系统 Python。
-`--setup` / `-Setup` 会在安装后打开只监听 `127.0.0.1` 的配置页。Key 直接保存到本机，
-不会经过聊天。已有配置留空即可保留。
+### 市场进入时机
+
+```text
+请使用 amz-cli 判断 US 站 ASIN B0XXXX 的进入时机。
+
+目标关键词：
+从现在到可售需要【N】个月。
+
+请结合真实关键词趋势和当前日期，给出“进入”“谨慎”或“停止”的结论。
+写明高峰月份、预计开售月份、是否匹配和结论可信度。
+只评价时机，不要把利润、产品力或准入风险混入结论。
+```
+
+### 利润与 FBA 测算
+
+```text
+请使用 amz-cli 分析 US 站 ASIN B0XXXX 的利润和资金效率。
+
+采购价：【美元】
+头程方式和单件成本：
+广告点击成本：【美元，可空】
+转化率：【百分比，可空】
+汇率：【人民币/美元】
+
+请列出采用的售价、尺寸、重量、采购价、头程、佣金和 FBA 费。
+缺失数据必须单独列出并说明假设。
+请输出平台费用后利润、含采购和头程的毛利、广告后利润、资金回报率，
+以及影响利润最大的三个变量。
+```
+
+### 法规和平台准入
+
+```text
+请使用 amz-cli 检查这个产品在 US 站的法规和平台准入风险。
+
+ASIN 或产品描述：
+材料和成分：
+目标人群：
+功效声明：
+供电、无线、电池、液体或气雾剂情况：
+目标类目和发货方式：
+
+请分别列出法规要求、Amazon 平台要求和团队内部风险标准。
+只使用当前官方来源并记录检查日期；未知项不能写成通过。
+```
+
+### 知识产权风险
+
+```text
+请使用 amz-cli 对 US 站 ASIN B0XXXX 做知识产权风险检查。
+
+重点检查外观专利、实用专利、商标、版权和授权型 IP。
+请列出检索路径、已知权利、状态来源、相关性和遗漏检查。
+没有发现结果不能表述为“安全”。
+
+如果出现高相关专利候选，请继续深查并整理给律师复核的证据。
+```
+
+## 怎样判断报告是否可靠
+
+不要用报告长度判断质量。至少检查以下内容：
+
+- 是否真的成功取得了数据，而不是只用常识回答。
+- 是否写清站点、类目、关键词、ASIN 和样本量。
+- 是否列出成功项、失败项、数据日期和数据新鲜度。
+- 数字和事实是否有来源，推断是否明确标注。
+- 是否区分单品问题与多个竞品的共同问题。
+- 缺失信息是否写为“未知”，并降低结论可信度。
+- 建议是否包含具体动作、验证方法和停止信号。
+- 是否保留可以复查的任务记录。
+
+### 评论分析的五条底线
+
+- 分星级抽样适合发现主题，但不能代表自然星级占比。
+- 满意度应依据真实评分汇总，不能用抽样评论数量反推。
+- 高满意度商品的少量差评不能直接定义为市场共性。
+- 频次、评分和引用必须来自工具返回的数据，不能虚构评论原文。
+- 不同人群或使用场景发生冲突时，应保留差异，不能强行合并。
+
+## 使用边界
+
+- 当前实现以 Amazon US 为主。其他站点必须先确认数据是否真正按站点区分。
+- 市场结果来自本次取得的商品样本，不代表 Amazon 全市场。
+- 大模型分析属于推理结果，不是数据库事实。关键判断必须有数据或来源支持。
+- 利润结果取决于售价、尺寸、重量、采购、物流和广告参数。
+- 法规、Amazon 政策和专利状态会变化，执行时必须核对当前官方来源。
+- 工具不会登录 Seller Central 检查账户资格，不能证明某个账户已经获准销售或使用 FBA。
+- 知识产权检查用于整理风险信号和证据，不能替代律师意见。
+- 当前工具只读，不能创建 Listing、改价、调广告、改库存或处理订单。
+
+## 密钥和数据安全
+
+- 不要把访问密钥（API Key/Token）或密码发到聊天中。
+- 首次配置时，AI 助手会打开本机配置页面，由你自己填写和保存。
+- 密钥字段留空会保留已有值，自动更新后不需要重新配置。
+- 密钥保存在本机，但不是加密保险箱，只应在可信设备和可信 AI 助手中使用。
+- 数据服务密钥会发送给对应服务进行身份验证。
+- 需要大模型的分析会把相关业务数据发送给你配置的模型服务。
+- 不要在任务内容中加入密码或未经授权的敏感信息。
 
 ## 自动更新
 
-安装器把公开命令和真实 CLI 分开：
+安装后，amz-cli 会定期检查官方 GitHub 仓库中的稳定版本。发现新版本时，它会自动完成
+校验和升级。更新不会覆盖已有密钥、缓存和历史任务。
 
-```text
-~/.local/bin/amz                 启动器：先按间隔检查更新
-~/.local/bin/amz-update          手动更新命令
-~/.local/share/amz-cli/tools/    隔离的 CLI 环境
-<Git clone>/                     wheel、Skill 和更新程序
-```
+请保留 AI 助手安装时创建的目录，不要移动或修改里面的文件。出现更新问题时，直接让
+AI 助手根据官方仓库检查和修复。
 
-默认每 24 小时最多联网检查一次。更新器只接受严格的稳定标签 `vX.Y.Z`，在临时 Git
-worktree 中校验 manifest、全部 SHA-256 和 wheel 后再安装。新 CLI 验证成功后才切换
-Skill 仓库。失败时保留旧版本，随后继续执行原命令。
+## 常见问题
 
-```bash
-amz-update --force                         # 立即检查
-AMZ_CLI_UPDATE_INTERVAL_HOURS=168 amz ...  # 每 7 天检查
-AMZ_CLI_AUTO_UPDATE=0 amz ...              # 关闭自动更新
-AMZ_CLI_SKIP_UPDATE=1 amz ...              # 本次跳过
-```
+| 情况 | 处理方式 |
+|---|---|
+| AI 助手说找不到 amz-cli | 把官方仓库链接重新发给 AI 助手，让它检查或修复安装 |
+| 提示需要认证 | 让 AI 助手打开本机配置页面，由你自己填写密钥 |
+| 提示输入不完整 | 补充站点、ASIN、关键词、成本或其他缺失信息 |
+| 部分数据没有取得 | 要求 AI 助手列出失败项，有限重试，不允许用猜测补齐 |
+| 请求过于频繁 | 等待一段时间后再试，不要连续高频提交同类任务 |
+| 大模型分析失败 | 检查对应模型服务的密钥、余额和可用状态 |
+| 第一次商品查询较慢 | 商品详情首次获取可能需要 10-40 秒，请等待 AI 助手完成 |
+| 找不到上次结果 | 下次开始前要求 AI 助手保留可复查的任务记录 |
+| 自动更新失败 | 把官方仓库链接交给 AI 助手，让它检查并修复 |
 
-## Key 为什么不需要重新配置
+---
 
-程序和配置在不同目录。安装器和更新器从不调用 `amz setup`，也不读写以下文件：
-
-- `~/.amz/config.yaml`
-- `~/.amz/.env`
-- `~/.sif_token`
-- `~/.cache/amz-cli/`
-- `~/.amz/amz-cli.db`
-
-升级只替换 `~/.local/share/amz-cli/tools/` 中的隔离环境。需要首次配置或主动换 Key 时，
-使用 `amz setup --web`。不要把 Key 写在聊天或命令行参数中。
-
-## 仓库内容
-
-- `SKILL.md`：Agent 安装、更新和任务入口。
-- `manager.py`：统一安装、校验、更新和回滚逻辑，只使用 Python 标准库。
-- `install.sh` / `install.ps1`：无 Python 环境的启动脚本。
-- `amz-cli-v1/`：当前 major 版本的 wheel、完整 Skill、能力索引和校验文件。
-
-## 发布新版本
-
-1. 在源码仓库同时更新 `pyproject.toml` 和 `amz.__version__`。
-2. 运行源码仓库的 `scripts/build_release.py`，让它刷新本仓库的 `amz-cli-v1/`。
-3. 在本仓库运行 `python3 manager.py verify` 和测试。
-4. 提交变更，创建与 manifest 一致的标签，例如 `v1.0.1`。
-5. 推送提交和标签。GitHub Actions 会验证并创建 Release 附件。
-
-标签、`manifest.json`、wheel 文件名和 CLI 的实际版本必须完全一致。
+amz-cli 是运营决策辅助工具。最终的采购、投产、上架、定价、合规和法律决定仍由业务
+负责人作出。
