@@ -399,6 +399,7 @@ class InstallPreservesConfigTests(unittest.TestCase):
             completed = subprocess.CompletedProcess([], 0, stdout="", stderr="")
 
             with (
+                mock.patch.object(manager.Path, "home", return_value=home),
                 mock.patch.dict(os.environ, environment, clear=False),
                 mock.patch.object(manager, "run", return_value=completed) as run_mock,
                 mock.patch.object(
