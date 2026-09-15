@@ -90,12 +90,15 @@ jobs:
           print(f"manifest and wheel versions match: {version}")
           PY
 
-      - name: Run standard-library unit tests
+      - name: Install test dependencies and bundled SDK
+        run: python -m pip install pytest ./amz-cli-v1/wheels/*.whl
+
+      - name: Run distribution tests
         run: |
           if [[ -d tests ]]; then
-            python -m unittest discover -s tests -p 'test_*.py' -v
+            python -m pytest tests -q
           else
-            python -m unittest discover -s . -p 'test_*.py' -v
+            python -m pytest . -q
           fi
 
       - name: Reject tracked secrets and generated files

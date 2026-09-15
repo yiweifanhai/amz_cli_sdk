@@ -1,0 +1,3 @@
+# Keep release checksums identical on every operating system.
+* text=auto eol=lf
+*.whl binary
