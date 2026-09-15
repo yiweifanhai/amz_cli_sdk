@@ -75,7 +75,10 @@ staging/
 /AGENTS.md
 /*.docx
 /*使用指南*.md
-/amz-cli-v1/references/docs/
+# Internal architecture documents must not ship in release bundles.
+**/references/docs/
+# Local alternative build.
+/cosmo-switch/
 *.bak
 *.log
 *.orig

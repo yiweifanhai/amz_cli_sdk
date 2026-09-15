@@ -370,6 +370,7 @@ class BundleVerificationTests(unittest.TestCase):
 
 class InstallPreservesConfigTests(unittest.TestCase):
     def test_install_does_not_modify_existing_credentials(self) -> None:
+        version = manager.verify_bundle(BUNDLE_DIR)["version"]
         with tempfile.TemporaryDirectory() as temp_dir:
             temp = Path(temp_dir)
             home = temp / "home"
@@ -401,7 +402,7 @@ class InstallPreservesConfigTests(unittest.TestCase):
                 mock.patch.dict(os.environ, environment, clear=False),
                 mock.patch.object(manager, "run", return_value=completed) as run_mock,
                 mock.patch.object(
-                    manager, "_verify_installed_cli", return_value="1.0.0"
+                    manager, "_verify_installed_cli", return_value=version
                 ) as verify_mock,
                 mock.patch.object(
                     manager, "_write_wrappers", return_value=command_paths
@@ -427,7 +428,7 @@ class InstallPreservesConfigTests(unittest.TestCase):
             wrappers_mock.assert_called_once_with(
                 install_root.resolve(), OUTPUT_DIR.resolve()
             )
-            self.assertEqual(result["version"], "1.0.0")
+            self.assertEqual(result["version"], version)
             self.assertEqual(
                 set(result["config_preserved"]),
                 {str(path) for path in credentials},

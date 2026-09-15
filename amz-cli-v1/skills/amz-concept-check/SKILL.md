@@ -29,13 +29,13 @@ metadata:
 
 ## 数据路径
 
-先读 `skills/amz/references/capabilities.md`，再按输入选择最小链路。
+先读相对本 Skill 目录的 `../amz/references/routes.md`，按需查
+`../amz/references/capabilities.md`，再按输入选择最小链路。
 
 有目标关键词时，优先调用：
 
 ```bash
-amz run entity.keyword.market_profile --param term="<keyword>" marketplace=US
-amz run entity.keyword.market_opportunity --param term="<keyword>" marketplace=US
+amz run entity.market.summary --param term="<keyword>" --param marketplace=US
 amz run entity.keyword.products --param term="<keyword>" marketplace=US
 ```
 
@@ -44,6 +44,10 @@ amz run entity.keyword.products --param term="<keyword>" marketplace=US
 ```bash
 amz run entity.product.voc --param asin=<ASIN>
 ```
+
+市场 summary 的分类用于选择同类方案；它基于标题，用户需求仍需 VOC 或外部证据。
+需要价格和品牌结构时按需补 `entity.keyword.market_profile`，不把数据完整度评分当需求真实性。
+比较 Listing 属性和使用场景时，调用所选竞品的 `entity.product.cosmo`；已有结果直接复用。
 
 `entity.product.voc` 已聚合以下 Product 字段，不要再手工抓详情和评论：
 

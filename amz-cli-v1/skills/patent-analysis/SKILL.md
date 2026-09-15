@@ -27,10 +27,10 @@ metadata:
 
 ```bash
 amz run entity.product.product_details --param asin=<ASIN>
-amz run entity.product.innovation --param asin=<ASIN>
+amz run entity.product.copyability --param asin=<ASIN>
 ```
 
-提取标题、品牌、图片、五点、说明、规格、完整类目和所有专利声明。创新能力只用于生成结构词、
+提取标题、品牌、图片、五点、说明、规格、完整类目和所有专利声明。可复制性分析只用于生成结构词、
 功能词和初始壁垒假设，不是检索结论。
 
 如需比较市场形态，可调用 `entity.product.competitors` 后只选少量代表品。Product Entity 已负责

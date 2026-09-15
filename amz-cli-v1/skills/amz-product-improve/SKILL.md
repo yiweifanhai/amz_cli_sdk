@@ -19,8 +19,11 @@ metadata:
 - `niche`：建议提供，用于报告标题和判断 ASIN 是否同类。
 - 用户约束：可选，如目标成本、不能改模、目标人群或材料限制。
 
-只有关键词时，先用 `entity.keyword.products` 找候选，再筛掉用途、价格带或产品形态不一致的项。
+只有关键词时，先用 `entity.market.summary` 取得已有的方案分类，再用 `entity.keyword.products`
+读取候选数值信息，筛掉用途、价格带或产品形态不一致的项。
 不要因为搜索结果相邻就把不同细分市场合并。
+
+正式入口和兼容名称见相对本 Skill 目录的 `../amz/references/routes.md`。
 
 ## Product Entity 主链
 
@@ -42,10 +45,11 @@ Entity 已处理依赖、TTL 和写回。
 批量调用和市场聚合可直接运行薄封装：
 
 ```bash
-amz python skills/amz-product-improve/scripts/run.py <ASIN1> <ASIN2> <ASIN3>
+amz python "<本 Skill 安装目录>/scripts/run.py" <ASIN1> <ASIN2> <ASIN3>
 ```
 
 脚本只调用公开 registry 能力，不含取数、分析提示词或缓存实现。结果较大时可用 `--out FILE`。
+将路径解析成实际绝对路径后执行，用户的工作目录无需切换到 Skill 目录。
 
 ## 市场聚合
 
@@ -57,6 +61,12 @@ amz python skills/amz-product-improve/scripts/run.py <ASIN1> <ASIN2> <ASIN3>
 
 如果弱点证据太少，先检查 `satisfaction_context`。高满意度商品的少量差评不能被放大成市场共性。
 确有需要时，按 ASIN 补 `entity.product.wishlist`，但它是辅助证据，不能替代真实问题频次。
+只需要未满足需求时，读取已有 `weaknesses.unmet_needs`；未生成弱点时可用
+`entity.product.unmet_needs` 自动补齐。不要再为同一需求调用一轮模型。
+
+用户同时要求现有方案的材质可行性或复制壁垒时，按需用 `entity.product.material`、
+`entity.product.copyability`；不要调用旧 `entity.product.innovation` 再重复评估。
+两者只分析已有商品事实，不能证明新提案的工艺、成本或专利可行性。
 
 ## 动态判断
 

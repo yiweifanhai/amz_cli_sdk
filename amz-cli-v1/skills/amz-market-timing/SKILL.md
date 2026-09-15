@@ -19,7 +19,8 @@ metadata:
 
 ## 调用链
 
-先读 `skills/amz/references/capabilities.md`。获取产品事实和主力词：
+先读相对本 Skill 目录的 `../amz/references/capabilities.md`。`analysis.market.timing`
+已直接使用重构后的 Market 实现，继续使用同一公开 ID。获取产品事实和主力词：
 
 ```bash
 amz run entity.product.product_details --param asin=<ASIN>
@@ -34,7 +35,8 @@ amz run entity.keyword.trends --param term="<keyword>" marketplace=US
 ```
 
 把 Product 详情、关键词趋势、当前日期和用户的上市周期交给
-`analysis.market.timing`。两次以上能力调用应放进一个 `amz python` 脚本，避免重复启动和
+`analysis.market.timing`：日期传 `current_date`（YYYY-MM-DD），准备月数传
+`preparation_months`（整数 0–24，默认 3），不能只在最终文案中改周期。两次以上能力调用应放进一个 `amz python` 脚本，避免重复启动和
 手工转义嵌套 JSON。`requires` 只描述依赖，不会替 Analysis 自动取数。
 
 如果趋势获取失败，仍可基于产品功能和使用场景做低置信度判断，但必须标记

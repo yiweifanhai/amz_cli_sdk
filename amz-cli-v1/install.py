@@ -7,6 +7,7 @@ import argparse
 import json
 import os
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -85,7 +86,8 @@ def main() -> int:
 
     target.parent.mkdir(parents=True, exist_ok=True)
     if not (target / "pyvenv.cfg").exists():
-        venv.EnvBuilder(with_pip=True).create(target)
+        # uv's macOS Python needs its original executable location for dylibs.
+        venv.EnvBuilder(with_pip=True, symlinks=os.name != "nt").create(target)
 
     if os.name == "nt":
         env_python = target / "Scripts" / "python.exe"
@@ -109,11 +111,30 @@ def main() -> int:
     if os.name == "nt":
         bin_dir.mkdir(parents=True, exist_ok=True)
         launcher = bin_dir / "amz.cmd"
-        launcher.write_text(f'@"{env_amz}" %*\r\n', encoding="utf-8")
+        launcher.write_text(
+            '@echo off\r\nif "%~1"=="setup" goto setup\r\n'
+            f'"{env_amz}" %*\r\nexit /b %ERRORLEVEL%\r\n'
+            ':setup\r\n'
+            f'"{env_python}" "{BUNDLE_DIR / "setup_app.py"}" --dispatch "{env_amz}" %*\r\n'
+            'exit /b %ERRORLEVEL%\r\n', encoding="utf-8",
+        )
         command_path = launcher
+        # Avoid an older uv-installed .exe taking precedence over the wrapper.
+        (bin_dir / "amz.exe").unlink(missing_ok=True)
     else:
         command_path = bin_dir / "amz"
-        install_link(env_amz, command_path)
+        # Replace an old symlink without overwriting its target executable.
+        temp = command_path.with_name(command_path.name + ".new")
+        bin_dir.mkdir(parents=True, exist_ok=True)
+        temp.unlink(missing_ok=True)
+        temp.write_text(
+            '#!/bin/sh\nif [ "${1:-}" = "setup" ]; then\n'
+            f'  exec {shlex.quote(str(env_python))} {shlex.quote(str(BUNDLE_DIR / "setup_app.py"))} '
+            f'--dispatch {shlex.quote(str(env_amz))} "$@"\nfi\n'
+            f'exec {shlex.quote(str(env_amz))} "$@"\n', encoding="utf-8",
+        )
+        temp.chmod(0o755)
+        temp.replace(command_path)
 
     version_result = run([str(env_amz), "version", "--json"], capture=True)
     caps_result = run([str(env_amz), "capabilities"], capture=True)

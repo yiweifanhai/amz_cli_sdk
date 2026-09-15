@@ -21,13 +21,8 @@ else
 fi
 
 "$uv_cmd" python install 3.12
-set -- "$bundle_dir"/wheels/amz_cli_sdk-*.whl
-if [ "$#" -ne 1 ] || [ ! -f "$1" ]; then
-    echo "expected one amz-cli wheel in $bundle_dir/wheels" >&2
-    exit 1
-fi
-sdk_wheel=$1
-"$uv_cmd" tool install --force --python 3.12 "${sdk_wheel}[full]"
+python_cmd=$("$uv_cmd" python find 3.12)
+"$python_cmd" "$bundle_dir/install.py"
 "$uv_cmd" tool update-shell >/dev/null 2>&1 || true
 
 export PATH="$HOME/.local/bin:$PATH"

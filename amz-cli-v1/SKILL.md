@@ -39,6 +39,13 @@ amz doctor
 
 ## 0. 定位能力（每任务先做这步）
 
+本次 Analysis 是原有能力的重构。原公开 ID 继续调用按 Product、Market、Keyword
+归组后的唯一实现；不要为同一问题分别跑“旧分析”和“新分析”。有实体身份时优先使用
+对应 Entity，已有完整输入时直接用 Analysis。具体选择见 [正式入口与兼容映射](references/routes.md)。
+
+本文的 `references/` 相对本 Skill 目录解析；命令中的脚本路径应先转成安装目录下的绝对路径，
+不假设当前工作目录就是 Skill 目录。
+
 ```bash
 # 先查本地能力索引——全部能力都在这一个文件里，按层分组，
 # 每个能力一行：ID + 用途 + 必填参数 + 依赖链。
@@ -133,9 +140,11 @@ amz run entity.keyword.market_profile --param term="portable blender" marketplac
 amz run entity.keyword.market_opportunity --param term="portable blender" marketplace=US category=
 ```
 
-Product 与 Keyword 的 Market 门面能力都是正式的 `entity.*` 能力：调用
-profile/opportunity 时会自动级联建立 Market 并补齐 Stats。Skill 不需要自己编排
-`entity.market.*`。
+Product 与 Keyword 的 profile/opportunity 门面仍用于市场数值画像和机会评分。
+解决方案分类、人群/场景概述使用 `entity.market.summary`；跨商品 COSMO 特征覆盖使用
+`entity.market.cosmo`。它们的输出不同，按问题选择，不用机会分冒充评论缺口或语义分析。
+用户已给关键词时直接传 `term`；只有 ASIN 时通过 `entity.product.primary_keyword_ref` 返回的 Ref，
+用 `EntityRef.model_validate(result.data).identity` 取得 Market 身份参数，详见调用映射示例。
 
 身份字段（`asin`/`term` 等）必填；getter 参数（如 `shipping_method`）可选。
 
@@ -161,11 +170,23 @@ amz task cleanup --older-than-hours 168 # 清理过期任务工作区
 # 商品详情（慢端点，首调 10-30s）
 amz run entity.product.product_details --param asin=B0GYFRH1L9
 
-# 利润率 / FBA / 资金效率
+# 利润率 / FBA / 资金效率（默认自动取最新日参考汇率，结果含日期与来源）
 amz run entity.product.finance --param asin=B0GYFRH1L9 shipping_method=fast
+
+# 显式汇率用于固定假设复算；最新汇率可用 data.fx.rate 单独查询
+amz run entity.product.finance --param asin=B0GYFRH1L9 exchange_rate=7.0
 
 # VOC：优势、弱点和使用洞察（自动级联评论与详情）
 amz run entity.product.voc --param asin=B0GYFRH1L9
+
+# 单品语义、材质及复制难度：按用户问题选择一项，自动准备输入和缓存
+amz run entity.product.cosmo --param asin=B0GYFRH1L9
+amz run entity.product.material --param asin=B0GYFRH1L9
+amz run entity.product.copyability --param asin=B0GYFRH1L9
+
+# 市场解决方案分类；需要全样本特征覆盖时再调用市场 COSMO
+amz run entity.market.summary --param term="portable blender" --param marketplace=US
+amz run entity.market.cosmo --param term="portable blender" --param marketplace=US --param pages=1 --param min_success=3
 
 # Product 的主力词；Keyword 的特征和趋势
 amz run entity.product.primary_keywords --param asin=B0GYFRH1L9
@@ -193,13 +214,14 @@ amz run calc.listing.word-diff --param old_text="a b c" new_text="a x c"
 
 | 用户目标 | Skill | 关键 CLI 入口 |
 |---|---|---|
-| 安装 CLI、初始化或配置 API Key / Token | `amz-setup` | `amz setup --web`、`amz setup --status --json` |
+| 安装 CLI、打开配置、设置 COSMO 图片或 API Key / Token | `amz-setup` | `amz setup --web`、`amz setup --status --json` |
 | 验证未上架新品想法 | `amz-concept-check` | `entity.keyword.*`、`entity.product.voc` |
-| 理解市场驱动、方案变化和用户场景 | `amz-market-insight` | `entity.keyword.market_*`、`entity.product.voc` |
+| 理解市场驱动、方案变化和用户场景 | `amz-market-insight` | `entity.market.summary`、按需 `entity.market.cosmo`、`entity.product.voc` |
 | 判断现在入局是否错过需求窗口 | `amz-market-timing` | `entity.product.product_details`、`entity.keyword.trends`、`analysis.market.timing` |
+| 改写 Listing 名称、商品亮点和五点 | `amz-listing-rewrite` | `analysis.listing.rewrite`、`analysis.listing.part-rewrite` |
 | 从一批竞品生成产品改进提案 | `amz-product-improve` | `entity.product.voc`、`analysis.market.*` |
 | 检查法规、类目和 FBA 准入 | `amz-risk-entry` | `entity.product.product_details` + 当前官方来源 |
-| 快筛专利、商标、版权和授权 IP | `amz-risk-ip` | `entity.product.innovation` + 官方 IP 数据库 |
+| 快筛专利、商标、版权和授权 IP | `amz-risk-ip` | `entity.product.copyability` + 官方 IP 数据库 |
 | 深查专利候选、状态和相关性 | `patent-analysis` | Product Entity + USPTO/专利数据库 |
 
 `amz-product-improve` 以 Product Entity 的 `strengths`、`weaknesses` 和
@@ -214,7 +236,7 @@ amz run calc.listing.word-diff --param old_text="a b c" new_text="a x c"
 | `ERROR_AUTH` | token 缺失/无效 | `amz setup` 或设 `AMZ_API_TOKEN` |
 | `ERROR_UPSTREAM` | 上游失败/实体 fetch 失败 | 看 `meta.hint`；重试或降级（如 market.snapshot 自动降级） |
 | `ERROR_RATE_LIMIT` | 限流 | 退避后重试 |
-| `ERROR_LLM` | LLM 调用失败 | 重试或换模型（`analysis.*` 需要 DEEPSEEK_API_KEY） |
+| `ERROR_LLM` | LLM 调用失败 | 核查豆包 Key、模型权限及响应；不要自动转用其他收费模型 |
 | `ERROR_MISSING_FIELDS` | Calc/Analysis 输入字段不完整 | 读 `meta.missing`；优先改走 Entity 补字段 |
 | `ERROR_CACHE_MISS` | 指定缓存未命中 | 允许取数时改走 Entity ensure；只读场景直接报告缺失 |
 | `ERROR_NOT_FOUND` | 能力不存在/资源缺失 | 检查能力 ID |
@@ -225,6 +247,10 @@ amz run calc.listing.word-diff --param old_text="a b c" new_text="a x c"
 - **慢端点**：`product.get`、`entity.product.product_details` 首调 10-30s，bash 超时给足 60s+
 - **API Key 配置**：交给 `amz-setup` Skill 打开本机安全页面。不要要求普通用户输入命令，
   也不要让用户把密钥发到聊天中。发布包不包含任何 API Key
+- **模型分档**：内置 Analysis 默认统一使用豆包；COSMO 图片按比例缩到最长边 512 像素，与 Listing 一起交给 Lite 直接抽取；不单独做 OCR。
+  常规聚合和相关性判断沿用 Lite，深度诊断、产品比较和完整 Listing 改写等原有 Pro 任务保留 Pro。
+  一个豆包 / Ark Key 即可使用三档；无 Key 或调用失败时明确报错，不自动切其他模型服务。
+- **COSMO 图片开关**：让 `amz-setup` 打开配置页，统一控制全部主图、附图及 A+ 图。默认开启；关闭时只分析文字，修改后下次抽取重算缓存。
 - **缓存**：`~/.cache/amz-cli/`（实体缓存 + 任务工作区）；`amz task cleanup` 定期清理
 - **环境自检**：报错先跑 `amz doctor`；命令不存在时按“安装检查”执行 Skill 自带安装器
 - **索引版本**：以当前 Skill 的 `references/capabilities.md` 为快速索引；完整 schema
@@ -233,5 +259,6 @@ amz run calc.listing.word-diff --param old_text="a b c" new_text="a x c"
 ## 参考
 
 - `references/capabilities.md` — 能力全索引（自动生成）
+- `references/routes.md` — 原有业务的正式入口、兼容名称及适用输入
 - `skills/<name>/SKILL.md` — 垂类 Agent 的动态编排说明
 - `README.md` — CLI-first 接入细节

@@ -19,11 +19,12 @@ metadata:
 
 ```bash
 amz run entity.product.product_details --param asin=<ASIN>
-amz run entity.product.innovation --param asin=<ASIN>
+amz run entity.product.copyability --param asin=<ASIN>
 ```
 
 第一项提供 Listing、品牌、图片、类目和结构描述；第二项只提供专利、供应链、技术与品牌壁垒的
-初筛信号。`entity.product.innovation` 不是专利检索结果，不能单独支持“无专利风险”。
+初筛信号。`entity.product.copyability` 不是专利检索结果，不能单独支持“无专利风险”。
+旧 innovation 是该结果的兼容投影，不重复调用；入口映射见 `../amz/references/routes.md`。
 
 需要了解市场是否被单一品牌或授权 IP 控制时，可读取 `entity.product.competitors`，再选 3-5 个
 代表商品核对品牌、形态和声明。不要批量调用无关 ASIN 来堆数量。

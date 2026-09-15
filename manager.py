@@ -244,6 +244,7 @@ def _write_wrappers(root: Path, repository: Path) -> tuple[Path, Path]:
     bin_dir = user_bin_dir()
     _, python, real_amz = _tool_paths(root)
     manager = repository / "manager.py"
+    setup_app = repository / "setup_app.py"
     if os.name == "nt":
         amz_path = bin_dir / "amz.cmd"
         update_path = bin_dir / "amz-update.cmd"
@@ -252,7 +253,11 @@ def _write_wrappers(root: Path, repository: Path) -> tuple[Path, Path]:
             "if not \"%AMZ_CLI_SKIP_UPDATE%\"==\"1\" (\r\n"
             f'  "{python}" "{manager}" update --quiet 1>nul\r\n'
             ")\r\n"
+            'if "%~1"=="setup" goto setup\r\n'
             f'"{real_amz}" %*\r\n'
+            "exit /b %ERRORLEVEL%\r\n"
+            ':setup\r\n'
+            f'"{python}" "{setup_app}" --dispatch "{real_amz}" %*\r\n'
             "exit /b %ERRORLEVEL%\r\n"
         )
         update_content = (
@@ -277,6 +282,9 @@ def _write_wrappers(root: Path, repository: Path) -> tuple[Path, Path]:
             'if [ "${AMZ_CLI_SKIP_UPDATE:-0}" != "1" ]; then\n'
             f"  {python_q} {manager_q} update --quiet >/dev/null || true\n"
             "fi\n"
+            'if [ "${1:-}" = "setup" ]; then\n'
+            f'  exec {python_q} {shlex.quote(str(setup_app))} --dispatch {real_amz_q} "$@"\n'
+            'fi\n'
             f'exec {real_amz_q} "$@"\n'
         )
         update_content = (
