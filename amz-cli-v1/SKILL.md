@@ -250,7 +250,7 @@ amz run calc.listing.word-diff --param old_text="a b c" new_text="a x c"
 - **模型分档**：内置 Analysis 默认统一使用豆包；COSMO 图片按比例缩到最长边 512 像素，与 Listing 一起交给 Lite 直接抽取；不单独做 OCR。
   常规聚合和相关性判断沿用 Lite，深度诊断、产品比较和完整 Listing 改写等原有 Pro 任务保留 Pro。
   一个豆包 / Ark Key 即可使用三档；无 Key 或调用失败时明确报错，不自动切其他模型服务。
-- **COSMO 图片开关**：让 `amz-setup` 打开配置页，统一控制全部主图、附图及 A+ 图。默认开启；关闭时只分析文字，修改后下次抽取重算缓存。
+- **COSMO 图片开关**：让 `amz-setup` 打开配置页，统一控制全部主图、附图及 A+ 图。默认关闭；关闭时只分析文字，修改后下次抽取重算缓存。
 - **缓存**：`~/.cache/amz-cli/`（实体缓存 + 任务工作区）；`amz task cleanup` 定期清理
 - **环境自检**：报错先跑 `amz doctor`；命令不存在时按“安装检查”执行 Skill 自带安装器
 - **索引版本**：以当前 Skill 的 `references/capabilities.md` 为快速索引；完整 schema

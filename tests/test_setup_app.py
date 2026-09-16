@@ -250,6 +250,7 @@ def test_autosave_failure_returns_json_without_secrets_and_keeps_server_open(loc
 
 
 def test_cosmo_switch_autosaves_and_reopens_with_saved_choice(local_files):
+    assert '<option value="false" selected>' in setup.render_form('initial-session')
     instance = server()
     instance.shutdown = mock.Mock()
     result = post(instance, '/save', {'session_token': 'test-session', 'cosmo_use_images': 'false'})
