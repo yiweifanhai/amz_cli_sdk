@@ -51,11 +51,11 @@ amz run entity.product.voc --param asin=<ASIN>
 
 用户需要比较商品特征、文案语义或市场覆盖时，使用 `entity.market.cosmo`；根据研究范围明确
 `pages`（1–3）与 `min_success`。它会读取所选页数的全部 Product，不只是代表 ASIN。
-只研究指定商品时按调用映射使用 Product COSMO→显式样本的 `analysis.market.cosmo`。
+只研究指定商品时，使用具有明确 product_refs 的 Market；通过 `entity.market.cosmo` 准备并分析该样本，不直接组装底层 Analysis 输入。
 使用返回的 coverage_count、coverage_denominator、failed_product_refs 和 sources，
 不把词条出现次数当商品覆盖，也不把未提及当功能不存在。
 
-需要跨商品评论缺口时，将已有 VOC 传入 `analysis.market.gap-analysis`，不拿数值机会分代替。
+需要跨商品评论缺口时，调用 `entity.market.gap` 并传 sample_refs，由 Market 复用 Product VOC。至少 3 个有效评论证据商品；证据不足时停止，不拿数值机会分代替。
 
 外部搜索只负责 Entity 没有覆盖的宏观变化与近 5-10 年解决方案变化。使用执行当天的
 年份作为时间锚点，优先美国本地、官方、研究机构和可靠产品评测来源。市场可能增长、

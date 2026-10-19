@@ -4,8 +4,7 @@ description: >
   amz-cli 是以 Product、Keyword 和 Market Entity 为业务主体的 Amazon 数据 SDK 统一入口，
   同时提供底层取数、确定性计算、原子推理和固定 SOP。
   本 skill 自带全量能力索引（references/capabilities.md，含每个能力的用途、必填参数、
-  依赖链）和垂类 Agent 路由。Amazon 任务优先从 Entity 进入；只有没有对应 Entity 字段、
-  已持有完整输入或需要调试底层能力时，才直接调用 Data、Calc 或 Analysis。
+  依赖链）和垂类 Agent 路由。Amazon 任务优先从 Entity 进入；Calc 和 Analysis 由 Entity 方法内部调用；没有 ASIN 的新品使用 ProductDraft，不裸调 Calc 或 Analysis。
 
   当任务涉及 Amazon 商品/关键词/市场数据、利润率与 FBA 费用计算、VOC 评论分析、
   Listing 优化、竞品与市场分析、选品评估、新品/需求/风险判断，或需要调用
@@ -39,9 +38,7 @@ amz doctor
 
 ## 0. 定位能力（每任务先做这步）
 
-本次 Analysis 是原有能力的重构。原公开 ID 继续调用按 Product、Market、Keyword
-归组后的唯一实现；不要为同一问题分别跑“旧分析”和“新分析”。有实体身份时优先使用
-对应 Entity，已有完整输入时直接用 Analysis。具体选择见 [正式入口与兼容映射](references/routes.md)。
+Entity 是计算和分析业务的唯一对外主体。Skill 选择 Entity 方法或已注册 Composite，由 Entity 准备依赖、检查有效证据并管理结果。Calc 和 Analysis 是内部实现，不允许直接执行；旧 Calc / Analysis ID 的迁移见 [调用映射](references/routes.md)。
 
 本文的 `references/` 相对本 Skill 目录解析；命令中的脚本路径应先转成安装目录下的绝对路径，
 不假设当前工作目录就是 Skill 目录。
@@ -54,12 +51,9 @@ read references/capabilities.md
 
 索引按 Agent 的推荐路由排列。先确定入口，再查具体能力：
 
-- **Entity（默认）**：已知 Product、Keyword 或 Market，希望读取或生成它的字段。
+- **Entity**：读取字段或执行改写、比较、提案等任务方法；无 ASIN 使用 ProductDraft。
 - **Composite**：步骤、顺序和分支已经固定，希望复用完整流程。
-- **Data**：没有对应 Entity 入口，或需要调试原始取数。包括 `product.*`、`keyword.*`、
-  `market.*`、`category.*`、`ads.*` 和 `supply.*`。
-- **Calc / Analysis**：已经持有完整输入，或 Entity 没有对应字段。Calc 做确定性计算，
-  Analysis 做单一语义推理。
+- **Data**：保留供 SDK 调试；Skill 业务流程只使用 Entity / Composite。Calc 与 Analysis 不属于公开调用接口，已有完整数据也不能绕过 Entity。
 
 索引里没有的细节才需要动态查：
 
@@ -75,7 +69,7 @@ amz capabilities --id <capability_id>    # 单个能力完整 schema（可选参
 amz run <capability_id> --param key=value [--param k2=v2 ...] [--out FILE] [--task run_id]
 ```
 
-- 值先按 JSON 解析（嵌套 dict/list 传 JSON 字符串，如 `'product_info={"title":"x"}'`），失败按字符串
+- 值先按 JSON 解析（嵌套 dict/list 传 JSON 字符串，如 `'keywords={"S":["water bottle"]}'`），失败按字符串
 - 调用前按 input_schema 强转类型：`"1"→1`、`"true"→True`
 - 缺参/类型错返回 `ERROR_PARAM`，message 明确列出缺失字段与允许的键——据此修正重试
 
@@ -122,9 +116,9 @@ if keywords:
 
 `entity.*` 走实体 lazy 链路：自动 fetch 依赖字段、级联 enrich、TTL 回填，
 一次调用拿到完整结果，不用手工拼多个能力。索引里 `requires` 标注了
-自动级联内容——能走 `entity.*` 就不裸调 `calc.*`/`analysis.*`。
+自动级联内容——业务分析必须走 `entity.*`，不裸调 `calc.*` 或 `analysis.*`。
 
-核心 Entity 只有 `Product`、`Keyword` 和 `Market`。Review 和 Finance 是 Product 的字段模型，
+Amazon 核心 Entity 为 `Product`、`Keyword` 和 `Market`；本地 `ProductDraft` 保存用户提供的新概念或文案事实。Review 和 Finance 是 Product 的字段模型，
 不是独立业务 Entity。Entity 关系只保存 `EntityRef`，调用方不应自行拼接或展开缓存文件。
 
 ```bash
@@ -146,11 +140,9 @@ Product 与 Keyword 的 profile/opportunity 门面仍用于市场数值画像和
 用户已给关键词时直接传 `term`；只有 ASIN 时通过 `entity.product.primary_keyword_ref` 返回的 Ref，
 用 `EntityRef.model_validate(result.data).identity` 取得 Market 身份参数，详见调用映射示例。
 
-身份字段（`asin`/`term` 等）必填；getter 参数（如 `shipping_method`）可选。
+身份字段（`asin`/`term`/`draft_id` 等）必填；其他必需任务参数以 schema 为准。
 
-`requires` 是声明式依赖，不表示 Registry 会自动执行前置能力。必须裸调 `calc.*` 或
-`analysis.*` 时，先按其 input schema 准备完整输入；需要任务记录时，把相关调用挂到同一个
-`run_id`。收到 `ERROR_MISSING_FIELDS` 时读取 `meta.missing`，优先改走能自动补字段的 Entity。
+`requires` 仅描述依赖；自动补数据由 Entity 方法执行。带上下文的任务方法接收实体身份/Ref、样本范围和业务参数，不接受任意字典覆盖本品事实。收到缺字段或上游失败时报告原因并停止该分析，不编造占位数据，也不调用内部实现绕过。
 
 ## 3. 任务与中间文件
 
@@ -199,10 +191,11 @@ amz run entity.keyword.market_profile --param term="portable blender" marketplac
 amz run entity.keyword.market_opportunity --param term="portable blender" marketplace=US category=
 
 # 确定性计算（无需网络）
-amz run calc.listing.word-diff --param old_text="a b c" new_text="a x c"
+amz run entity.product_draft.set_facts --param draft_id=demo 'facts={"title":"a b c"}'
+amz run entity.product_draft.listing_diff --param draft_id=demo new_text="a x c"
 ```
 
-其余 60+ 能力（COSMO、需求评估、创新评估、市场缺口、进入时机、材质门槛、
+其余公开能力（COSMO、需求评估、创新评估、市场缺口、进入时机、材质门槛、
 类目树、Rufus、1688 供应商、SIF 广告漏斗等）都在 `references/capabilities.md`，
 接任务时按关键词查索引，别凭印象选能力。
 
@@ -217,9 +210,9 @@ amz run calc.listing.word-diff --param old_text="a b c" new_text="a x c"
 | 安装 CLI、打开配置、设置 COSMO 图片或 API Key / Token | `amz-setup` | `amz setup --web`、`amz setup --status --json` |
 | 验证未上架新品想法 | `amz-concept-check` | `entity.keyword.*`、`entity.product.voc` |
 | 理解市场驱动、方案变化和用户场景 | `amz-market-insight` | `entity.market.summary`、按需 `entity.market.cosmo`、`entity.product.voc` |
-| 判断现在入局是否错过需求窗口 | `amz-market-timing` | `entity.product.product_details`、`entity.keyword.trends`、`analysis.market.timing` |
-| 改写 Listing 名称、商品亮点和五点 | `amz-listing-rewrite` | `analysis.listing.rewrite`、`analysis.listing.part-rewrite` |
-| 从一批竞品生成产品改进提案 | `amz-product-improve` | `entity.product.voc`、`analysis.market.*` |
+| 判断现在入局是否错过需求窗口 | `amz-market-timing` | `entity.market.timing` |
+| 改写 Listing 名称、商品亮点和五点 | `amz-listing-rewrite` | `entity.product.listing_rewrite`、`entity.product.listing_part_rewrite` |
+| 从一批竞品生成产品改进提案 | `amz-product-improve` | `entity.market.proposals` |
 | 检查法规、类目和 FBA 准入 | `amz-risk-entry` | `entity.product.product_details` + 当前官方来源 |
 | 快筛专利、商标、版权和授权 IP | `amz-risk-ip` | `entity.product.copyability` + 官方 IP 数据库 |
 | 深查专利候选、状态和相关性 | `patent-analysis` | Product Entity + USPTO/专利数据库 |
@@ -237,7 +230,7 @@ amz run calc.listing.word-diff --param old_text="a b c" new_text="a x c"
 | `ERROR_UPSTREAM` | 上游失败/实体 fetch 失败 | 看 `meta.hint`；重试或降级（如 market.snapshot 自动降级） |
 | `ERROR_RATE_LIMIT` | 限流 | 退避后重试 |
 | `ERROR_LLM` | LLM 调用失败 | 核查豆包 Key、模型权限及响应；不要自动转用其他收费模型 |
-| `ERROR_MISSING_FIELDS` | Calc/Analysis 输入字段不完整 | 读 `meta.missing`；优先改走 Entity 补字段 |
+| `ERROR_MISSING_FIELDS` | 必需业务事实或有效证据不足 | 读 `meta.missing`；补真实证据后重试 Entity，不填占位值 |
 | `ERROR_CACHE_MISS` | 指定缓存未命中 | 允许取数时改走 Entity ensure；只读场景直接报告缺失 |
 | `ERROR_NOT_FOUND` | 能力不存在/资源缺失 | 检查能力 ID |
 | `ERROR_SERVER_INTERNAL` | SDK 未预期异常 | 保留 capability 和 message，停止盲目重试 |

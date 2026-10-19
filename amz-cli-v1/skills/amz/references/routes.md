@@ -1,69 +1,87 @@
-# 正式入口与兼容映射
+# Entity 业务入口
 
-Analysis 重构保留原公开 ID，运行时注册到 `amz.analysis.product`、`market`、`keyword`、
-`taobao_market` 中的正式实现。旧名称不代表旧算法，不能为同一输入重复跑两套分析。
-Python 脚本通过 `amz.registry.invoke` 调公开 ID，不依赖旧模块的函数签名。
+Skill 只通过 Entity 或已注册 Composite 调用计算和分析业务。`calc.*` 和 `analysis.*` 是内部实现，普通 CLI、Python call、HTTP 和 MCP 不接受直接执行；内部旧 ID 只保留实现兼容。遇到旧调用，按下面映射改用 Entity，不拼空字典或调用开发测试入口绕过检查。
 
-## 有 ASIN 或关键词时
-
-| 用户要解决的问题 | 优先入口 | 与原调用的关系 |
+| 业务 | Entity 入口 | 输入与结果 |
 |---|---|---|
-| 商品文案/图片的 COSMO 语义 | `entity.product.cosmo` | 自动准备输入，再调用重构后的 `analysis.cosmo.extract` |
-| 材质及开发难度 | `entity.product.material` | 自动准备输入，再调用 `analysis.material.assess` |
-| 复制难度与壁垒 | `entity.product.copyability` | `entity.product.innovation` 仅是同一结果的兼容投影，不额外调用 |
-| 商品优势、弱点和使用洞察 | `entity.product.voc` | 自动准备详情与评论，复用对应 Product Analysis；只需一项时调用 `entity.product.strengths`、`entity.product.weaknesses` 或 `entity.product.use_insights` |
-| 只看未满足需求 | `entity.product.unmet_needs` | 从同一份 weaknesses 结果读取；已有 VOC 时直接用 `weaknesses.unmet_needs` |
-| Amazon 市场方案分类、人群与场景 | `entity.market.summary` | 自动准备标题样本，调用 `analysis.market.classify`；标题只支持样本概述 |
-| 市场 COSMO 特征及覆盖 | `entity.market.cosmo` | 自动准备 Product COSMO，调用 `analysis.market.cosmo`；返回样本、失败项、来源与覆盖分母 |
-| 淘宝方案分类 | `entity.taobao_market.summary` | 自动准备淘宝样本，调用 `analysis.taobao.market_classify`；不使用 Amazon Entity 接收淘宝商品 |
+| 商品 COSMO、材质、复制难度 | `entity.product.cosmo` / `material` / `copyability` | ASIN + marketplace，自动准备依赖并缓存字段 |
+| 商品 VOC | `entity.product.voc` 或 `strengths` / `weaknesses` / `use_insights` / `praise` / `wishlist` | 评论任务必须有有效评论；空评论不算分析成功 |
+| Listing 改写、插词、局部改写、分配关键词 | `entity.product.listing_rewrite` / `listing_micro_insert` / `listing_part_rewrite` / `listing_allocate` | 自动取本品事实，另传关键词和编辑要求；草稿不覆盖原 Listing |
+| 新品与真实竞品比较 | `entity.product.compare` | `benchmark_refs` 为 3–5 个同站点真实 Product 引用 |
+| 商品维度打标 | `entity.product.classify` | 显式 `dimensions`，本品事实由 Entity 读取 |
+| 商品关键词相关性与覆盖 | `entity.product.keyword_relevance` / `keyword_gap` | 显式候选关键词，商品事实自动准备 |
+| COSMO 的目标商品位置建议 | `entity.product.cosmo_classify` | `market_ref` 与采样参数；自动准备 Market COSMO |
+| 关键词聚类、评分 | `entity.keyword.cluster` / `score` | 候选集；score 还必需目标 `product_ref`，不接收裸 product_info |
+| 市场分类、COSMO | `entity.market.summary` / `cosmo` | term + marketplace + 采样参数 |
+| COSMO 精确术语合并 | `entity.market.cosmo_merge` | 可传 `sample_refs` / `pages`；准备各 Product.cosmo 后保留 `terms/groups` 和位置计数，不做语义模型分组 |
+| COSMO 按阈值和目标商品同义聚合 | `entity.market.cosmo_aggregate` | `min_count`、`model`，可传 `target_product_ref` 准备真实目标上下文；保留原 TermGroup 结果 |
+| 市场成功因子、缺口、改造提案 | `entity.market.success_factors` / `gap` / `proposals` | term + marketplace，可指定 `sample_refs`；至少 3 个有有效评论证据的商品，proposals 自动生成并返回本次成功因子与缺口 |
+| 市场时机 | `entity.market.timing` | 显式 `current_date`、`preparation_months`；自动补 Keyword 趋势，缺真实趋势就停止 |
+| TACOS、关键词市场广告后利润 | `entity.market.tacos` | term + pages；自动读取 SIF ACOS 与 Product 反查词，输出 3/6/12 月累进/互斥分组。属于估算，不含采购成本；缺广告数据不填零 |
+| 需求计算 | `entity.market.demand` | 带来源、观察日期和三年区间的 `google_evidence`；Entity 自动补 Amazon 月度同比和市场收入样本，或检查显式 `amazon_evidence` / `market_evidence`，缺必需证据就停止 |
+| 主定价维度、其他决策维度 | `entity.market.primary_pricing_dimension` / `discover_dimensions` | 市场样本、候选 `keywords`，自动准备商品事实、价格带和词群 |
+| 淘宝市场分类 | `entity.taobao_market.summary` | 淘宝 term，不混用 Amazon 商品身份 |
 
-只有 ASIN 而需要市场分析时，调用 `entity.product.primary_keyword_ref`，将返回 Ref 解析为对象后读取
-`identity`。JSON 只包含 entity_type/key，没有 identity 字段：
+以上短名称均在该行前缀之下。参数结构以 `amz capabilities --id <完整 ID>` 为准。
+
+## 引用与明确样本
+
+Product 引用由工厂生成，不手拼站点或创建假 ASIN：
 
 ```python
-from amz import registry, Code
-from amz.schemas.entity_ref import EntityRef
+from amz import call, Code
+from amz.schemas.entity_ref import product_ref, EntityRef
 
-relation = registry.invoke("entity.product.primary_keyword_ref", {"asin": asin, "marketplace": "US"})
-if relation.code != Code.OK:
-    raise RuntimeError(relation.message)
-identity = EntityRef.model_validate(relation.data).identity
-summary = registry.invoke("entity.market.summary", identity)
-if summary.code != Code.OK:
-    raise RuntimeError(summary.message)
+refs = [product_ref("US", asin).model_dump(mode="json") for asin in asins]
+result = call("entity.market.proposals", term=keyword, marketplace="US", sample_refs=refs)
+if result.code != Code.OK:
+    raise RuntimeError(result.message)
 ```
 
-这里的 `asin` 使用用户已提供的值。已有明确关键词时直接用 `term` 和 `marketplace`。
-取样和模型参数先查 `amz capabilities --id <id>`。
+只有 ASIN 而没有目标市场关键词时，读取 `entity.product.primary_keyword_ref`，用 `EntityRef.model_validate(result.data).identity` 得到市场身份参数。该 Ref 的 JSON 只有 entity_type/key，不直接包含 identity。
 
-`entity.market.cosmo` 会处理所选页数内的全部商品，并不只处理报告里展示的代表品。
-需要全样本特征覆盖时再调用，并明确 pages 与成功样本门槛；只研究少数指定 ASIN 时，
-逐个调用 `entity.product.cosmo` 后用 `analysis.market.cosmo` 汇总显式样本。
-Ref 用 SDK 的 `product_ref(marketplace, asin)` 工厂创建，来源/更新时间按实际数据填写。
+`sample_refs` 代表本次明确商品集合，不改变 Product 的主市场归属。对失败、空结果和有效数据分别处理；不能用成功返回数代替有证据的商品数。
 
-## 已持有完整输入时
+COSMO 的 `cosmo_merge` 和 `cosmo_aggregate` 是独立任务方法，不等同于持久字段 `cosmo`。它们自动补齐 Product.cosmo 并复用有效单品缓存，附 `evidence` 中的使用/失败 refs、源时间和最小成功数；不接受调用方拼接 `cosmo_outputs`。省略 pages 保留已选 Market 样本，显式 sample_refs 不改 Market 的长期样本。旧 `analysis.cosmo.merge/aggregate` 分别迁到这两个入口，不能改成统一调用 `entity.market.cosmo` 丢掉参数和结果字段。
 
-| 原有业务或名称 | 正式调用方式 |
-|---|---|
-| Listing 改写、插词、分配、局部修改 | 继续调用 `analysis.listing.rewrite`、`analysis.listing.micro-insert`、`analysis.listing.allocate`、`analysis.listing.part-rewrite`；这些 ID 已指向新 Product 实现 |
-| 关键词相关性、意图聚类、评分 | 继续调用 `analysis.keyword.relevance`、`analysis.cluster.keywords`、`analysis.keyword.score`；显式候选不能被自动换成另一份关键词样本 |
-| 多商品成功因素 | `analysis.market.success-factors`，输入各商品的 strengths |
-| 评论中的市场缺口 | `analysis.market.gap-analysis`；旧 `analysis.market.gap` 注册到同一函数 |
-| 产品改进提案 | `analysis.market.renovation-proposal`；旧 `analysis.market.proposals` 注册到同一函数 |
-| 新品与基准品比较、进入时机、规格维度 | 保留对应 `analysis.innovation.compare`、`analysis.market.timing`、`analysis.asin.discover-dimensions`、`analysis.asin.primary-pricing-dimension`；它们已使用新实现，仍需完整任务上下文 |
-| 多商品 COSMO 语义汇总 | 新任务用 `analysis.market.cosmo`，准备带 Product Ref、来源和时间的输入。旧 `analysis.cosmo.aggregate` 共用分组核心，但其 min_count/target_product 和旧输出结构不同，仅在调用者确需该格式时保留 |
-| COSMO 确定性合并、关键词覆盖计算 | 用 `calc.cosmo.merge`、`calc.keyword.gap`；旧 `analysis.cosmo.merge`、`analysis.keyword.gap` 是计算兼容入口，不是额外模型分析 |
+## 没有 ASIN 的新品或已有文案
 
-输入或输出结构不同的入口不能只替换 ID。市场 profile/opportunity 提供数值画像与机会分，
-summary 提供标题分类，COSMO 提供 Listing 特征覆盖，gap-analysis 提供评论缺口；按研究问题取用。
-已有 strengths/weaknesses/use_insights 时直接传给市场分析，不重新抓取或重复生成同一份 VOC。
+使用本地 `ProductDraft`，不建立假的 Product。先创建有明确本地名称的草稿事实，再调用它的业务方法：
 
-## 版本与结果读取
+```python
+from amz import call, Code
 
-- capability 的完整输入/输出 schema 以已安装 CLI 为准。兼容 ID 保留不代表所有字段永远不变。
-- `primary_keyword_ref`、`product_refs` 等引用入口返回 Ref，解析后用对象的 `identity` 继续调用公开能力。
-  旧 `entity.product.market` 仍返回 Market 投影，不能按 Ref 解析；新流程使用上面的主关键词引用。
-- Listing 的 `title_differentiation` 是独立亮点，不能丢弃或拼回超长标题。
-- VOC 的 positive_pct/negative_pct 为 null 时表示缺少全量星级分布，不是 0%。
-- 当前 Analysis 使用豆包/Ark Key。旧用户只配置 DeepSeek 时需要通过配置页补豆包 Key。
-- 宿主负责选路、检查证据和组织报告；SDK Analysis 仍执行实际模型调用与结果校验。
+saved = call("entity.product_draft.set_facts", draft_id="bottle-concept", facts={
+    "marketplace": "US", "title": "A reusable water bottle",
+    "bullet_points": ["User supplied, confirmed product feature"], "source": "user",
+})
+if saved.code != Code.OK:
+    raise RuntimeError(saved.message)
+result = call("entity.product_draft.listing_rewrite", draft_id="bottle-concept", keywords={"S": ["water bottle"]})
+```
+
+`ProductDraft.compare` 同样要求 3–5 个真实竞品引用。源事实来自用户，输出仍是建议或草稿，不视为已售商品事实。草稿不是 Amazon EntityRef；通过 draft_id 访问。
+
+## 失败与结果
+
+Entity 负责补依赖及数据检查。缺必需证据返回具体缺项；上游失败保留错误，不回退为常识结论，不用 `[]`、`{}`、`unknown` 填充绕过。真实没有发现痛点时报告缺少提案依据，不要求模型强行产生机会。
+
+字段能力复用 TTL 缓存；带样本/比较对象/日期/编辑要求的 task operation 不缓存结果，复用底层字段缓存。提案输出包含本次成功因子和缺口，不重复调用三套分析。
+
+Keyword.score 会补取候选词的四维指标；只有 search_volume、PPC 和 conversion_rate 仍可能不足。按错误中的逐词缺项报告，不把 PPC 当作竞争指标，也不补默认 5 分。
+
+## 确定性计算
+
+Calc 也属于内部实现。旧 `calc.*` 调用应迁移到下列 Entity；普通 CLI、Python call、HTTP、MCP 和 Composite 都不接受 Calc 直调。
+
+| 计算 | 正式入口 | 调用条件 |
+|---|---|---|
+| FBA 费用、毛利率、资金回报 | `entity.product.fba_fee` / `margin` / `return_on_capital` | Product 自动准备价格、包裹数据；显式成本与日期属于任务参数 |
+| 主力词、Listing 覆盖 | `entity.product.primary_keywords` / `keyword_gap` | 自动准备反查词或当前 Listing |
+| 文案差异 | `entity.product.listing_diff` / `entity.product_draft.listing_diff` | 传 new_text 和 part；原文从实体读取 |
+| 满意度、材质门槛 | `entity.product.satisfaction` / `material_eligibility` | 自动准备评论评分或材质结论 |
+| 流量维度 | `entity.product.traffic_dimensions` | 传同站点 market_ref，价格带来自 Market 样本 |
+| 市场统计、画像、机会分 | `entity.market.stats` / `profile` / `opportunity` | 使用 Market 当前样本，可显式传 pages |
+| 需求分、COSMO 精确合并 | `entity.market.demand` / `cosmo_merge` | 延续前文证据模型与 Product refs 规则 |
+
+已有完整数据也不能用内部测试接口绕过 Entity。收到缺项时恢复数据源或补用户真实任务条件，不传假价格、假评论或任意商品字典。

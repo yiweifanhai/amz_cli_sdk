@@ -45,7 +45,7 @@ Entity 已处理依赖、TTL 和写回。
 批量调用和市场聚合可直接运行薄封装：
 
 ```bash
-amz python "<本 Skill 安装目录>/scripts/run.py" <ASIN1> <ASIN2> <ASIN3>
+amz python "<本 Skill 安装目录>/scripts/run.py" <ASIN1> <ASIN2> <ASIN3> --term "<市场关键词>"
 ```
 
 脚本只调用公开 registry 能力，不含取数、分析提示词或缓存实现。结果较大时可用 `--out FILE`。
@@ -53,12 +53,9 @@ amz python "<本 Skill 安装目录>/scripts/run.py" <ASIN1> <ASIN2> <ASIN3>
 
 ## 市场聚合
 
-至少 3 个 Product VOC 成功后，按以下现有能力聚合：
+调用 `entity.market.proposals`，提供 term、marketplace 和明确的 sample_refs。Market 自动补齐 Product 评论/VOC，检查至少 3 个商品有真实评论与有效痛点，再生成本次缺口、成功因子和提案。结果包含 success_factors、market_gap 与 evidence，直接复用，不再重复调用分析。
 
-1. `analysis.market.success-factors`：输入各 ASIN 的 `strengths`。
-2. `analysis.market.gap-analysis`：输入各 ASIN 的 `weaknesses` 与 `use_insights`。
-3. `analysis.market.renovation-proposal`：输入成功因子、痛点、机会点和市场使用洞察。
-
+只需要中间结论时，可单独调用 `entity.market.success_factors` 或 `entity.market.gap`。这些均由 Entity 检查证据；不手工拼装 strengths/weaknesses 字典，不直接调用 Analysis。
 如果弱点证据太少，先检查 `satisfaction_context`。高满意度商品的少量差评不能被放大成市场共性。
 确有需要时，按 ASIN 补 `entity.product.wishlist`，但它是辅助证据，不能替代真实问题频次。
 只需要未满足需求时，读取已有 `weaknesses.unmet_needs`；未生成弱点时可用
@@ -70,7 +67,7 @@ amz python "<本 Skill 安装目录>/scripts/run.py" <ASIN1> <ASIN2> <ASIN3>
 
 ## 动态判断
 
-- 成功 VOC 少于 3 个：只给单品观察，不输出“市场共性”。
+- 有效评论/痛点证据商品少于 3 个：停止市场分析，报告缺项；成功返回数不能替代有效证据商品数。
 - 某问题只出现在 1 个 ASIN：标为单品问题，不冒充市场缺口。
 - 优势与弱点冲突：保留满意度背景，说明这是取舍、品控波动还是结构缺陷。
 - 建议不符合用户成本或工艺限制：删除或降级，不保留空泛方向。
@@ -92,6 +89,6 @@ amz python "<本 Skill 安装目录>/scripts/run.py" <ASIN1> <ASIN2> <ASIN3>
 4. 使用场景、人群和购买动机的交叉洞察。
 5. 按“机会高、难度低”排序的 5-10 条微改造提案。
 6. 每条提案的验证方法与停止信号。
-7. 失败 ASIN、缺失字段和置信度。
+7. 失败 ASIN、缺失字段和置信度。有效样本足够但部分商品失败时，保留结果并标为 `PARTIAL`，同时列出失败清单；不能声称全部样本成功。
 
 报告中的频次、评分和引用必须来自能力结果。不要虚构评论原文。

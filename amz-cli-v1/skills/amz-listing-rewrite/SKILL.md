@@ -7,18 +7,14 @@ description: 改写 Amazon Listing 的商品名称、商品亮点和五点描述
 
 ## 准备与入口
 
-有 ASIN 时先取 `entity.product.product_details`，从结果读取本品品牌、标题、五点和已确认规格；已有完整文本时直接调用 Analysis。不用竞品信息补造本品事实。
+有 ASIN 时调用 `entity.product.*` 方法，Entity 自动取得本品事实；不把竞品信息补成本品事实。没有 ASIN 或用户提供完整文案时，先用 `entity.product_draft.set_facts` 保存明确的用户事实，再调用同名 `entity.product_draft.*` 方法，草稿例子见 `../amz/references/routes.md`。
 
-以下 ID 已调用重构后的 Product Analysis，继续通过公开 ID 使用，不另做一套宿主改写。
-用户要求先找语义遗漏或分析图文属性时，用 `entity.product.cosmo` 并复用其来源证据；
-已有完整文本且只要求改写时直接进入编辑能力。入口映射见 `../amz/references/routes.md`。
+- 全量改写：`entity.product.listing_rewrite`，传 keywords 和可用的 feedback、title_differentiation。
+- 插入关键词：`entity.product.listing_micro_insert`，传 insert_plan；亮点所需词放 insert_plan.title_differentiation。
+- 单独修改：`entity.product.listing_part_rewrite`，part 为 title、bp1–bp5 或 title_differentiation；亮点模式传已确认的配套 draft_title 和现有 title_differentiation。
+- 分配关键词：`entity.product.listing_allocate`；当前只分配 Title/BP1–5，同时安排亮点时使用全量改写。
 
-- 全量改写：`analysis.listing.rewrite`。传入 `title`、`bullet_points`、`brand`，以及可用的原 `title_differentiation` 和分级 `keywords`。
-- 插入关键词：`analysis.listing.micro-insert`，使用完整 Listing 模式（`title`、`bullet_points`、`insert_plan`），可传原 `title_differentiation`。亮点所需新增词可放 `insert_plan.title_differentiation`。原文超长时允许必要删减。
-- 单独修改商品名称、亮点或某条五点：`analysis.listing.part-rewrite`，`part_label` 分别使用 `Title`、`title_differentiation`、`BP1` 等。亮点模式的 `product_title` 必须是配套的新商品名称。
-- `analysis.listing.allocate` 当前只分配 Title/BP1–5；要同时重新安排亮点时优先用全量改写。
-
-具体参数以 `amz capabilities --id <id>` 为准。Listing 是显式编辑任务，不写回原商品详情、不自动发布。
+需要先识别语义遗漏时调用 `entity.product.cosmo` 或 `keyword_gap`。参数以 `amz capabilities --id <id>` 为准。任务结果不覆盖原商品详情，也不自动发布。缺事实时报告缺项，不调用内部 Analysis 绕过。
 
 ## 发布规则
 

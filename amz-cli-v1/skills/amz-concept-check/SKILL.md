@@ -55,8 +55,8 @@ amz run entity.product.voc --param asin=<ASIN>
 - `weaknesses`：评论中的痛点、未满足需求和满意度背景。
 - `use_insights`：真实使用场景、人群和购买动机。
 
-新品描述已经足够完整，且有 3-5 个基准品数据时，可把完整临时数据交给
-`analysis.innovation.compare`。新品还不是 Entity，不要伪造 ASIN 或写入 Product 缓存。
+新品描述先通过 `entity.product_draft.set_facts` 保存为带 draft_id 的用户事实，再调用
+`entity.product_draft.compare`，传入 3–5 个真实基准商品的 benchmark_refs。Entity 自动准备基准品详情；缺事实或样本时停止，不使用虚拟基准，不伪造 ASIN。参数与草稿示例见 `../amz/references/routes.md`。
 
 外部搜索只补 CLI 数据没有覆盖的内容：站外讨论、替代方案、退货原因和价格锚点。
 优先找反面证据；每个市场判断保留来源链接和检索日期。最多 10 次搜索或 15 分钟。

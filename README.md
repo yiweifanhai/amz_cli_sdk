@@ -6,6 +6,14 @@ amz-cli 让 Codex、Claude Code 和其他 AI 助手（Agent）可以获取 Amazo
 你只需要说清楚要做什么决策。AI 助手负责选择工具，amz-cli 负责提供数据和分析结果。
 运营人员不需要学习代码，也不需要记住命令。
 
+## 1.2.0：个人 SellerSprite MCP Token 与业务入口更新
+
+配置页新增可选 SellerSprite MCP Token，原有命令自动经服务端透传，平台 API Key 仍需保留。兼容新旧数据响应，修复字段、关键词匹配与缓存；缺失精准 PPC 返回空值。个人 Token 请求失败不自动换用平台凭据。
+
+同时包含 Entity/Calc/Analysis 入口整理、关键词市场 TACOS 分析及共享能力契约更新。Calc/Analysis 仅供内部调用，对外使用 Entity；旧 Python 模块路径已移除。
+
+CLI 与服务端调用链已离线验证。真实 Token、生产部署及 Listing 免扣 Credit 策略尚未线上验收；Spider 本身不负责计费。业务缓存命中时不会消耗个人 MCP 额度。
+
 ## 1.1.3：COSMO 默认只分析文字
 
 - COSMO 图片开关默认关闭；没有保存该配置时，不下载或发送主图、附图和 A+ 图片，市场聚合也使用文字分析结果。

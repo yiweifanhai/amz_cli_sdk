@@ -162,6 +162,14 @@ function saveField(field) {
       const data = await response.json();
       if (!response.ok || !data.saved) throw new Error(data.error || '自动保存失败');
       markSaved(field, value);
+      if (field.name === 'sellersprite_action' && value === 'clear') {
+        const sellerField = form.elements.sellersprite_token;
+        sellerField.value = ''; savedValues.set(sellerField, '');
+        notes.get(sellerField).textContent = '已清除';
+        const badge = sellerField.closest('label').querySelector('.badge');
+        badge.textContent = '未配置'; badge.className = 'badge missing';
+        field.value = 'keep'; savedValues.set(field, 'keep');
+      }
     } catch (_) {
       errors.add(field); notes.get(field).textContent = '未保存，请检查输入和连接后重试；页面过期时需重新打开。';
     } finally { saving--; showStatus(); }
