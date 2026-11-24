@@ -176,9 +176,15 @@ amz run entity.product.cosmo --param asin=B0GYFRH1L9
 amz run entity.product.material --param asin=B0GYFRH1L9
 amz run entity.product.copyability --param asin=B0GYFRH1L9
 
+# 单 ASIN 创新度：比较主市场满一年的代表老品，返回已有方案匹配和创新分
+amz run entity.product.novelty --param asin=B0HDLF7B1S
+
 # 市场解决方案分类；需要全样本特征覆盖时再调用市场 COSMO
 amz run entity.market.summary --param term="portable blender" --param marketplace=US
 amz run entity.market.cosmo --param term="portable blender" --param marketplace=US --param pages=1 --param min_success=3
+
+# 机会方案排名、已验证新品与市场趋势（亚马逊美国站 + 淘宝第一页）
+amz run entity.market.solution_outlook --param term="shower caddy" --param taobao_term="浴室置物架" --param pages=1
 
 # Product 的主力词；Keyword 的特征和趋势
 amz run entity.product.primary_keywords --param asin=B0GYFRH1L9

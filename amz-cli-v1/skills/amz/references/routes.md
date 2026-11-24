@@ -8,11 +8,13 @@ Skill 只通过 Entity 或已注册 Composite 调用计算和分析业务。`cal
 | 商品 VOC | `entity.product.voc` 或 `strengths` / `weaknesses` / `use_insights` / `praise` / `wishlist` | 评论任务必须有有效评论；空评论不算分析成功 |
 | Listing 改写、插词、局部改写、分配关键词 | `entity.product.listing_rewrite` / `listing_micro_insert` / `listing_part_rewrite` / `listing_allocate` | 自动取本品事实，另传关键词和编辑要求；草稿不覆盖原 Listing |
 | 新品与真实竞品比较 | `entity.product.compare` | `benchmark_refs` 为 3–5 个同站点真实 Product 引用 |
+| 单 ASIN 创新度判定 | `entity.product.novelty` | 输入美国站 ASIN 即可。用反查主词的搜索样本分组，比较本品与代表老品的主图和五点。老品默认按评估日往前满 12 个月选取。输出 `existing`、匹配 ASIN、逐组证据及 0–100 创新分。同方案默认最高 60 分。默认取前 2 页、最多 6 组、每组最多 3 件。可用 `sample` 核对候选组、已比组及跳过原因。未命中仅限实际比较的样本。 |
 | 商品维度打标 | `entity.product.classify` | 显式 `dimensions`，本品事实由 Entity 读取 |
 | 商品关键词相关性与覆盖 | `entity.product.keyword_relevance` / `keyword_gap` | 显式候选关键词，商品事实自动准备 |
 | COSMO 的目标商品位置建议 | `entity.product.cosmo_classify` | `market_ref` 与采样参数；自动准备 Market COSMO |
 | 关键词聚类、评分 | `entity.keyword.cluster` / `score` | 候选集；score 还必需目标 `product_ref`，不接收裸 product_info |
 | 市场分类、COSMO | `entity.market.summary` / `cosmo` | term + marketplace + 采样参数 |
+| 创新解决方案研判、下一代主流方案、市场有哪些创新机会 | `entity.market.solution_outlook` | 提供美国站 `term`，可用 `taobao_term` 指定对应中文词，省略时用 `term` 查淘宝第一页。可选 `pages` 控制亚马逊页数。新品默认上架 ≤180 天，月营收 >$5000 且月销量 >200 件才算验证；评论占比过高、上架当月销量异常或同父体已有老商品的列为疑似老品换新 ASIN，不计入验证。下一代候选至少需要 2 条独立商品线。两平台共用方案名，输出机会排名、替代理由、阻力、反证和样本趋势。分方案列出新品销量占比、起量天数及两平台各自的价格带 |
 | COSMO 精确术语合并 | `entity.market.cosmo_merge` | 可传 `sample_refs` / `pages`；准备各 Product.cosmo 后保留 `terms/groups` 和位置计数，不做语义模型分组 |
 | COSMO 按阈值和目标商品同义聚合 | `entity.market.cosmo_aggregate` | `min_count`、`model`，可传 `target_product_ref` 准备真实目标上下文；保留原 TermGroup 结果 |
 | 市场成功因子、缺口、改造提案 | `entity.market.success_factors` / `gap` / `proposals` | term + marketplace，可指定 `sample_refs`；至少 3 个有有效评论证据的商品，proposals 自动生成并返回本次成功因子与缺口 |
