@@ -7,7 +7,7 @@
 原有 Analysis ID 继续使用重构后的唯一实现。Skill 优先通过 Entity 准备资料、缓存和写回；
 已有完整输入时直接调用 Analysis。正式入口与兼容名称见 [调用映射](references/routes.md)。
 
-当前分析需要可用的豆包/Ark Key。旧用户只有 DeepSeek Key 时，在本机配置页补充豆包 Key。
+AI 分析只需要一个豆包（火山方舟）Key。旧版留下的 DeepSeek 等设置已停用，运行 `amz setup` 保存一次即可清理。
 Listing 返回独立商品亮点；VOC 比例为 null 表示缺少星级分布，不按 0% 处理。
 从 Git 仓库安装的用户通过新的稳定标签更新；只有 main 有改动而版本未变时不会自动升级。
 

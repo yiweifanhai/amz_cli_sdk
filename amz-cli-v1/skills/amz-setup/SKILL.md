@@ -43,7 +43,7 @@ description: 为普通用户安装或配置 amz-cli 的 Amazon/SIF 数据 Token 
 - 已保存的 Ark Key 可直接复用；无需要求用户再填一次相同密钥。
 - COSMO 图片按比例缩到最长边 512 像素，与文字一起交给 Lite 直接抽取；原有深度分析任务保留 Pro。
 - 状态“已配置”只表示存在 Key，不证明三款模型均有权限。调用失败要报告具体错误，
-  不自动转用 DeepSeek、OpenRouter 或其他服务。旧服务的密钥仍保留，但不在新配置页展示。
+  不自动转用其他服务。旧版留下的 DeepSeek、OpenRouter 等设置已停用，`amz setup` 保存时自动清理，`amz doctor` 会提示残留。
 
 ## 安全约束
 

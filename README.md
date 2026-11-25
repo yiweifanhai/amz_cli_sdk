@@ -41,7 +41,7 @@ CLI 与服务端调用链已离线验证。真实 Token、生产部署及 Listin
 复制难度和 VOC 自动准备资料与缓存；市场分类和特征覆盖按问题选择，不重复运行兼容名称。
 具体入口见 [调用映射](amz-cli-v1/references/routes.md)。
 
-分析使用豆包/Ark Key；旧用户只有 DeepSeek Key 时需在配置页补充。发布时 wheel、manifest
+AI 分析统一使用豆包（火山方舟）Key，只需配置这一个；旧版留下的 DeepSeek 等设置已停用，运行 `amz setup` 保存一次即可清理。发布时 wheel、manifest
 和稳定标签使用同一版本，已有安装通过新标签更新。
 
 > 覆盖 100+ 项可组合功能 · 主要适用于 Amazon US · 当前为只读工具

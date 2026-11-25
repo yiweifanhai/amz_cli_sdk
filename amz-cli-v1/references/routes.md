@@ -15,6 +15,7 @@ Skill 只通过 Entity 或已注册 Composite 调用计算和分析业务。`cal
 | 关键词聚类、评分 | `entity.keyword.cluster` / `score` | 候选集；score 还必需目标 `product_ref`，不接收裸 product_info |
 | 市场分类、COSMO | `entity.market.summary` / `cosmo` | term + marketplace + 采样参数 |
 | 创新解决方案研判、下一代主流方案、市场有哪些创新机会 | `entity.market.solution_outlook` | 提供美国站 `term`，可用 `taobao_term` 指定对应中文词，省略时用 `term` 查淘宝第一页。可选 `pages` 控制亚马逊页数。新品默认上架 ≤180 天，月营收 >$5000 且月销量 >200 件才算验证；评论占比过高、上架当月销量异常或同父体已有老商品的列为疑似老品换新 ASIN，不计入验证。下一代候选至少需要 2 条独立商品线。两平台共用方案名，输出机会排名、替代理由、阻力、反证和样本趋势。分方案列出新品销量占比、起量天数及两平台各自的价格带 |
+| 某市场该跟进什么方向、有证据的创新方向、新品在往哪个方向走 | `entity.market.solution_directions` | 提供美国站 `term`，可选 `pages`、`taobao_term`（默认不查淘宝）、`explain`（默认为 A/B 卡写解释）。按父体合并商品线；已验证新品 = 上架 ≤6 个月、月销 >200 件、月销额 >$5000 且无疑似老链接信号。模型只按标题打方案标签（结构/人群/场景/配置，以及新方案/简化降配/加量套装/节日季节），不看销量；程序给方向定 A/B/C：A 需 ≥2 条已验证新品线、≥1 条亚马逊前台'过去一个月 200+'标记、新品中份额比老品高 ≥10 个点。默认形态、当前主流和节日方向不出卡，简化/加量单列。没有已验证新品线的市场不出卡 |
 | COSMO 精确术语合并 | `entity.market.cosmo_merge` | 可传 `sample_refs` / `pages`；准备各 Product.cosmo 后保留 `terms/groups` 和位置计数，不做语义模型分组 |
 | COSMO 按阈值和目标商品同义聚合 | `entity.market.cosmo_aggregate` | `min_count`、`model`，可传 `target_product_ref` 准备真实目标上下文；保留原 TermGroup 结果 |
 | 市场成功因子、缺口、改造提案 | `entity.market.success_factors` / `gap` / `proposals` | term + marketplace，可指定 `sample_refs`；至少 3 个有有效评论证据的商品，proposals 自动生成并返回本次成功因子与缺口 |
