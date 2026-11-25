@@ -1,6 +1,6 @@
 # amz-cli 能力全索引
 
-> 本文件由 `scripts/gen_capabilities.py` 自动生成，勿手改。生成时间：2026-11-25 14:40 UTC，共 **107** 个能力。
+> 本文件由 `scripts/gen_capabilities.py` 自动生成，勿手改。生成时间：2026-11-25 16:55 UTC，共 **107** 个能力。
 
 每个能力一行：ID + 用途 + 必填参数 + 前置依赖（`requires`）。
 Skill 计算和分析业务调用 Entity 或 Composite；Data 仅供明确调试，Calc 和 Analysis 不公开。
