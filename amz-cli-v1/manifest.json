@@ -1,20 +1,22 @@
 {
   "name": "amz-cli-sdk",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "bundle": "amz-cli-v1",
-  "created_at": "2026-11-25T16:55:59.663490+00:00",
+  "created_at": "2026-11-26T19:53:16.718911+00:00",
   "python_requires": ">=3.11",
-  "built_with_python": "3.12.12",
+  "built_with_python": "3.13.12",
   "platform": "macOS-14.5-x86_64-i386-64bit-Mach-O",
   "machine": "x86_64",
-  "capability_count": 107,
-  "skill_count": 10,
+  "capability_count": 109,
+  "skill_count": 12,
   "skills": [
     "amz (bundle entry)",
     "amz-concept-check",
+    "amz-listing-audit",
     "amz-listing-rewrite",
     "amz-market-insight",
     "amz-market-timing",
+    "amz-novelty",
     "amz-product-improve",
     "amz-risk-entry",
     "amz-risk-ip",
@@ -24,9 +26,9 @@
   "install_mode": "online dependency resolution with uv; local wheel contains the CLI",
   "wheels": [
     {
-      "file": "amz_cli_sdk-1.4.1-py3-none-any.whl",
-      "size": 646317,
-      "sha256": "81d43e4a41a944ded47d7e247dc621e1963a01cfbe2bc56ebd739b1e29015cc7"
+      "file": "amz_cli_sdk-1.5.0-py3-none-any.whl",
+      "size": 743462,
+      "sha256": "5005011fdc8dc2eececbaf9dcb2c3cf495fa106eaa911c9720bc2ea4953aff30"
     }
   ]
 }

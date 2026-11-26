@@ -1,0 +1,6 @@
+interface:
+  display_name: "Amazon Listing 审查"
+  short_description: "逐部分审查新品 Listing 的硬伤并给出证据"
+  default_prompt: "使用 $amz-listing-audit 审查这个 ASIN 的 Listing，按标题、五点、主图、副图、A+、描述给出评分、硬伤和证据。"
+policy:
+  allow_implicit_invocation: true

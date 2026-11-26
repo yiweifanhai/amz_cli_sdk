@@ -176,15 +176,15 @@ amz run entity.product.cosmo --param asin=B0GYFRH1L9
 amz run entity.product.material --param asin=B0GYFRH1L9
 amz run entity.product.copyability --param asin=B0GYFRH1L9
 
-# 单 ASIN 创新度：比较主市场满一年的代表老品，返回已有方案匹配和创新分
+# 单 ASIN 创新度：比较早于本品上架 6 个月以上的代表老品，返回已有方案匹配、创新类型、买家价值和值得跟进的创新分
 amz run entity.product.novelty --param asin=B0HDLF7B1S
 
 # 市场解决方案分类；需要全样本特征覆盖时再调用市场 COSMO
 amz run entity.market.summary --param term="portable blender" --param marketplace=US
 amz run entity.market.cosmo --param term="portable blender" --param marketplace=US --param pages=1 --param min_success=3
 
-# 机会方案排名、已验证新品与市场趋势（亚马逊美国站 + 淘宝第一页）
-amz run entity.market.solution_outlook --param term="shower caddy" --param taobao_term="浴室置物架" --param pages=1
+# 市场创新方向：前台筛选+模型维度分类（标题+主图），各类走势与新品证据，哪类在替代哪类
+amz run entity.market.solution_evolution --param term="shower caddy" --param pages=1
 
 # Product 的主力词；Keyword 的特征和趋势
 amz run entity.product.primary_keywords --param asin=B0GYFRH1L9
@@ -217,7 +217,9 @@ amz run entity.product_draft.listing_diff --param draft_id=demo new_text="a x c"
 | 验证未上架新品想法 | `amz-concept-check` | `entity.keyword.*`、`entity.product.voc` |
 | 理解市场驱动、方案变化和用户场景 | `amz-market-insight` | `entity.market.summary`、按需 `entity.market.cosmo`、`entity.product.voc` |
 | 判断现在入局是否错过需求窗口 | `amz-market-timing` | `entity.market.timing` |
+| 审查已上架 Listing 的硬伤、逐部分打分并举证 | `amz-listing-audit` | `entity.product.listing_audit` |
 | 改写 Listing 名称、商品亮点和五点 | `amz-listing-rewrite` | `entity.product.listing_rewrite`、`entity.product.listing_part_rewrite` |
+| 判断已上架新品是否真创新、值不值得跟进，输出创新分、打分理由和 JSON | `amz-novelty` | `entity.product.novelty` |
 | 从一批竞品生成产品改进提案 | `amz-product-improve` | `entity.market.proposals` |
 | 检查法规、类目和 FBA 准入 | `amz-risk-entry` | `entity.product.product_details` + 当前官方来源 |
 | 快筛专利、商标、版权和授权 IP | `amz-risk-ip` | `entity.product.copyability` + 官方 IP 数据库 |

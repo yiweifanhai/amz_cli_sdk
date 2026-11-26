@@ -1,13 +1,13 @@
 # amz-cli 能力全索引
 
-> 本文件由 `scripts/gen_capabilities.py` 自动生成，勿手改。生成时间：2026-11-25 16:55 UTC，共 **107** 个能力。
+> 本文件由 `scripts/gen_capabilities.py` 自动生成，勿手改。生成时间：2026-11-26 19:53 UTC，共 **109** 个能力。
 
 每个能力一行：ID + 用途 + 必填参数 + 前置依赖（`requires`）。
 Skill 计算和分析业务调用 Entity 或 Composite；Data 仅供明确调试，Calc 和 Analysis 不公开。
 需要完整可选参数与字段说明时，跑 `amz capabilities --id <id>`。
 原有能力的正式入口与兼容名称见 [调用映射](routes.md)；同一任务不要重复调用兼容入口。
 
-## 推荐入口：实体（entity）（85 个）
+## 推荐入口：实体（entity）（87 个）
 
 - `entity.keyword.aba_series` — 获取关键词 ABA 周排名序列（需 csv_path 指向 ABA CSV 文件） — lazy 按需填充 + TTL 回填（aba_file） 必填: `term`
 - `entity.keyword.cluster` — 对显式候选或已有 related_keywords 做意图聚类，当前词作为主词 — lazy 按需填充 + TTL 回填（analysis.cluster.keywords） 必填: `term`
@@ -32,6 +32,7 @@ Skill 计算和分析业务调用 Entity 或 Composite；Data 仅供明确调试
 - `entity.market.profile` — 8 维市场画像（综合评分，委托 calc.market.calculate_profile） — lazy 按需填充 + TTL 回填（calc.market.profile） 必填: `term` 依赖: `entity.market.stats`
 - `entity.market.proposals` — Prepare VOC, gaps, and strengths for one sample before proposing changes — Entity prepares required evidence; task result is not cached 必填: `term`
 - `entity.market.solution_directions` — 创新方向证据卡：按父体合并商品线，模型只给标题打方案标签，程序用已验证新品、官方销量标记、新老份额变化和跟进起量给方向定 A/B/C，并为 A/B 卡写解释 — Entity prepares required evidence; task result is not cached 必填: `term`
+- `entity.market.solution_evolution` — 市场创新方向：用亚马逊前台筛选和模型补充维度给商品分类（标题+主图），程序算每类份额、同批老品走势、新品起量并定阶段与证据等级，再结合常识判断哪类在替代哪类、为什么更好 — Entity prepares required evidence; task result is not cached 必填: `term`
 - `entity.market.solution_outlook` — 创新解决方案研判：合并亚马逊与淘宝样本按方案归类，用已验证新品、销量、评分和趋势判断下一代主流候选 — Entity prepares required evidence; task result is not cached 必填: `term`
 - `entity.market.stats` — 计算市场画像统计（价格带/评分/上架时间/垄断度/卖家结构） — lazy 按需填充 + TTL 回填（calc.market.stats） 必填: `term` 依赖: `entity.market.products`
 - `entity.market.success_factors` — Fetch and verify at least three reviewed Products, then compare strengths — Entity prepares required evidence; task result is not cached 必填: `term`
@@ -51,6 +52,7 @@ Skill 计算和分析业务调用 Entity 或 Composite；Data 仅供明确调试
 - `entity.product.keyword_gap` — Check keyword coverage in this Product's current Listing — Entity prepares required evidence; task result is not cached 必填: `asin`, `keywords`
 - `entity.product.keyword_relevance` — Judge explicit keywords against this Product's prepared facts — Entity prepares required evidence; task result is not cached 必填: `asin`, `keywords`
 - `entity.product.listing_allocate` — Allocate supplied candidates using this Product's current Listing — Entity prepares required evidence; task result is not cached 必填: `asin`, `missing_keywords`
+- `entity.product.listing_audit` — 新品 Listing 分部分审查：按核心词找同方案竞品、同期新品和流量赢家，对照真实需求逐部分找硬伤并给证据 — Entity prepares required evidence; task result is not cached 必填: `asin`
 - `entity.product.listing_diff` — Compare proposed text with this Product or ProductDraft's saved Listing part — Entity prepares required evidence; task result is not cached 必填: `asin`, `new_text`
 - `entity.product.listing_micro_insert` — Insert planned keywords into this Product's current Listing — Entity prepares required evidence; task result is not cached 必填: `asin`, `insert_plan`
 - `entity.product.listing_part_rewrite` — Rewrite one existing title or bullet; its text is read from this Product — Entity prepares required evidence; task result is not cached 必填: `asin`, `part`, `keywords`
@@ -62,7 +64,7 @@ Skill 计算和分析业务调用 Entity 或 Composite；Data 仅供明确调试
 - `entity.product.market_stats` — 从 Product 直接获取 Market Stats；缺少 market 时自动级联创建 — lazy 按需填充 + TTL 回填（entity.market.stats） 必填: `asin` 依赖: `entity.product.market`
 - `entity.product.material` — Assess the product's material and development difficulty from available Listing facts — lazy 按需填充 + TTL 回填（analysis.material.assess） 必填: `asin` 依赖: `entity.product.product_details`
 - `entity.product.material_eligibility` — Apply material rules to this Product's prepared material assessment — Entity prepares required evidence; task result is not cached 必填: `asin`
-- `entity.product.novelty` — 单 ASIN 创新度判定：市场样本分组 + 方案词召回，对比早于本品上架的商品主图和五点，输出已有方案匹配、改良款和创新分 — Entity prepares required evidence; task result is not cached 必填: `asin`
+- `entity.product.novelty` — 单 ASIN 创新度判定：市场样本分组 + 方案词召回，对比早于本品上架的商品主图和五点，输出已有方案匹配、改良款、创新类型（原理形态/功能/场景/人群/外观材质/情绪价值）、买家价值和值得跟进的创新分 — Entity prepares required evidence; task result is not cached 必填: `asin`
 - `entity.product.praise` — 好评深度挖掘：从 4-5 星好评中提取用户喜爱点、惊喜点、竞品对比、价值感知 — lazy 按需填充 + TTL 回填（analysis.voc.praise） 必填: `asin` 依赖: `entity.product.reviews` → `entity.product.product_details`
 - `entity.product.primary_keyword_ref` — Use the first primary keyword as the sole source of the market relation — lazy 按需填充 + TTL 回填（aggregate） 必填: `asin`
 - `entity.product.primary_keywords` — 筛选主力流量词（从 reverse_keywords 中按规则提取 3-8 个） — lazy 按需填充 + TTL 回填（calc.keyword.primary） 必填: `asin` 依赖: `entity.product.reverse_keywords`

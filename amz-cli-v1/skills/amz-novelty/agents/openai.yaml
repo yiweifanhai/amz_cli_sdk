@@ -1,0 +1,6 @@
+interface:
+  display_name: "Amazon 单品创新度判定"
+  short_description: "对比更早的老品，判断新品是否真创新、值不值得跟"
+  default_prompt: "使用 $amz-novelty 判断这个 ASIN 是不是真创新，给出创新分、打分理由和结构化 JSON。"
+policy:
+  allow_implicit_invocation: true
